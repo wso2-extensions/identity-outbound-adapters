@@ -22,6 +22,7 @@
         <artifactId>wso2</artifactId>
         <version>1.4</version>
     </parent>
+
     <groupId>com.wso2.identity.outbound.adapters</groupId>
     <modelVersion>4.0.0</modelVersion>
     <version>1.0.0-SNAPSHOT</version>
@@ -32,17 +33,16 @@
     <description>This is to maintain a set of output event adapters which do not depend on Siddhi event stream techniques.</description>
     <url>http://wso2.org</url>
 
+    <modules>
+        <module>components/org.wso2.carbon.event.outbound.adapter.websubhub</module>
+    </modules>
+
     <scm>
         <url>https://github.com/wso2-extensions/identity-outbound-adapters.git</url>
         <developerConnection>scm:git:https://github.com/wso2-extensions/identity-outbound-adapters.git</developerConnection>
         <connection>scm:git:https://github.com/wso2-extensions/identity-outbound-adapters.git</connection>
         <tag>HEAD</tag>
     </scm>
-
-    <modules>
-        <module>components/org.wso2.carbon.event.outbound.adapter.core</module>
-        <module>components/outbound-adapters</module>
-    </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -85,11 +85,6 @@
                 <groupId>com.googlecode.json-simple.wso2</groupId>
                 <artifactId>json-simple</artifactId>
                 <version>${com.googlecode.json-simple.wso2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.wso2.identity.outbound.adapters</groupId>
-                <artifactId>org.wso2.carbon.event.outbound.adapter.core</artifactId>
-                <version>${identity.outbound.adapters.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
