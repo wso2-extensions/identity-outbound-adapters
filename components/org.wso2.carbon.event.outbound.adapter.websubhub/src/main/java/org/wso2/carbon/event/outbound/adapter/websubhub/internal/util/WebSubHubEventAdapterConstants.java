@@ -23,7 +23,10 @@ package org.wso2.carbon.event.outbound.adapter.websubhub.internal.util;
  */
 public class WebSubHubEventAdapterConstants {
 
-    public static final String ADAPTER_TYPE_WEBSUBHUB = "websubhub";
+    private WebSubHubEventAdapterConstants() {
+
+    }
+
     public static final String ADAPTER_MESSAGE_TENANT_DOMAIN = "tenant-domain";
     public static final String EVENT_ISSUER = "Asgardeo";
     public static final String AUDIENCE_BASE_URL = "https://websubhub/topics/";

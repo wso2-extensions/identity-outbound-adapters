@@ -16,28 +16,24 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal.model;
-
-import java.util.Map;
+package org.wso2.carbon.event.outbound.adapter.websubhub.model;
 
 /**
  * Model Class for Event Payload.
  */
-public class EventPayload {
+public abstract class EventPayload {
 
     private int organizationId;
     private String organizationName;
-    private String eventType;
-    private Map<String, Object> payload;
+    private String ref;
 
-    public Map<String, Object> getPayload() {
+    public String getRef() {
 
-        return payload;
+        return ref;
     }
+    public void setRef(String ref) {
 
-    public void setPayload(Map<String, Object> payload) {
-
-        this.payload = payload;
+        this.ref = ref;
     }
 
     public int getOrganizationId() {
@@ -58,15 +54,5 @@ public class EventPayload {
     public void setOrganizationName(String organizationName) {
 
         this.organizationName = organizationName;
-    }
-
-    public String getEventType() {
-
-        return eventType;
-    }
-
-    public void setEventType(String eventType) {
-
-        this.eventType = eventType;
     }
 }

@@ -32,8 +32,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.MDC;
 import org.wso2.carbon.event.outbound.adapter.websubhub.internal.ds.WebSubHubEventAdapterDataHolder;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.model.EventPayload;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.model.SecurityEventTokenPayload;
+import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
+import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 
 import java.io.IOException;
@@ -208,7 +208,7 @@ public class WebSubHubEventAdapterUtil {
 
         String correlationId;
         if (isCorrelationIDPresent()) {
-            correlationId = MDC.get(CORRELATION_ID_MDC).toString();
+            correlationId = MDC.get(CORRELATION_ID_MDC);
         } else {
             correlationId = UUID.randomUUID().toString();
         }

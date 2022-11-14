@@ -22,9 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.model.EventPayload;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.model.SecurityEventTokenPayload;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
+import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
 import java.util.Map;
 
@@ -39,7 +38,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     private String webSubHubBaseUrl = null;
 
     @Override
-    public void publish(Map<String, Object> eventPayload, String eventType, String topicSuffix, String eventUri,
+    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri,
                         Map<String, String> propertyMap) {
 
         if (StringUtils.isEmpty(webSubHubBaseUrl)) {
@@ -52,7 +51,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
 
         String tenantDomain = propertyMap.get(ADAPTER_MESSAGE_TENANT_DOMAIN);
         SecurityEventTokenPayload securityEventTokenPayload =
-                buildSecurityEventTokenPayload(eventPayload, tenantDomain, topicSuffix, eventUri, eventType);
+                buildSecurityEventToken(eventPayload, eventUri, topicSuffix, tenantDomain);
         makeAsyncAPICall(securityEventTokenPayload, tenantDomain, topicSuffix, webSubHubBaseUrl);
     }
 
@@ -66,27 +65,10 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
         // todo logic to remove the topic from the hub
     }
 
-    private SecurityEventTokenPayload buildSecurityEventTokenPayload(Map<String, Object> eventPayload,
-        String tenantDomain, String topic, String eventUri, String type) {
-
-        EventPayload payload = buildEventPayload(eventPayload, type, tenantDomain);
-        return buildSecurityEventToken(payload, eventUri, topic, tenantDomain);
-    }
-
     //TODO config read
     private void populateConfigs() {
 
         webSubHubBaseUrl = ADAPTER_HUB_URL;
     }
 
-    private EventPayload buildEventPayload(Map<String, Object> eventPayload, String type, String tenantDomain) {
-
-        EventPayload payload = new EventPayload();
-        payload.setEventType(type);
-        payload.setOrganizationId(IdentityTenantUtil.getTenantId(tenantDomain));
-        payload.setOrganizationName(tenantDomain);
-        payload.setPayload(eventPayload);
-
-        return payload;
-    }
 }

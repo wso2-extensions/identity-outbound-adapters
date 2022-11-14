@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal.model;
+package org.wso2.carbon.event.outbound.adapter.websubhub.model;
 
 import java.util.Map;
 
