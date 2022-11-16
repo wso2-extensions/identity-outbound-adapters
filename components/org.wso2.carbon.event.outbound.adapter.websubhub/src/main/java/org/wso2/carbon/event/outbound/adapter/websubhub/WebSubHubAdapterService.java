@@ -27,8 +27,7 @@ import java.util.Map;
  */
 public interface WebSubHubAdapterService {
 
-    void publish(EventPayload payload, String topicSuffix, String eventUri,
-                 Map<String, String> propertyMap);
+    void publish(EventPayload payload, String topicSuffix, String eventUri, Map<String, String> propertyMap);
 
     void addTopic(String topic);
 

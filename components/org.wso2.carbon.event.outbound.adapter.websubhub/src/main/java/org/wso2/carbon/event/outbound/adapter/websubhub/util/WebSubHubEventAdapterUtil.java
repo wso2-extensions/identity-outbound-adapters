@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal.util;
+package org.wso2.carbon.event.outbound.adapter.websubhub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
@@ -31,7 +31,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.MDC;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.ds.WebSubHubEventAdapterDataHolder;
+import org.wso2.carbon.event.outbound.adapter.websubhub.internal.WebSubHubEventAdapterDataHolder;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
@@ -39,23 +39,24 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.F
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.AUDIENCE_BASE_URL;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.EVENT_ISSUER;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.HUB_MODE;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.HUB_TOPIC;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.PUBLISH;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.TOPIC_SEPARATOR;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.URL_SEPARATOR;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.AUDIENCE_BASE_URL;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.EVENT_ISSUER;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.HUB_MODE;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.HUB_TOPIC;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.PUBLISH;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.TOPIC_SEPARATOR;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.URL_SEPARATOR;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants.ContentTypes.TYPE_APPLICATION_JSON;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 
 /**
- * This class contains the utility method implementations.
+ * This class contains the utility method implementations required by websubhub outbound event adapter.
  */
 public class WebSubHubEventAdapterUtil {
 
@@ -206,17 +207,6 @@ public class WebSubHubEventAdapterUtil {
      */
     public static String getCorrelationID() {
 
-        String correlationId;
-        if (isCorrelationIDPresent()) {
-            correlationId = MDC.get(CORRELATION_ID_MDC);
-        } else {
-            correlationId = UUID.randomUUID().toString();
-        }
-        return correlationId;
-    }
-
-    private static boolean isCorrelationIDPresent() {
-
-        return MDC.get(CORRELATION_ID_MDC) != null;
+        return Optional.ofNullable(MDC.get(CORRELATION_ID_MDC)).orElse(UUID.randomUUID().toString());
     }
 }

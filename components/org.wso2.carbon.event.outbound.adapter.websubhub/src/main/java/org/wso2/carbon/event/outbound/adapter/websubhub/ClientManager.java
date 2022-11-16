@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal;
+package org.wso2.carbon.event.outbound.adapter.websubhub;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -32,7 +32,7 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.ds.WebSubHubEventAdapterDataHolder;
+import org.wso2.carbon.event.outbound.adapter.websubhub.internal.WebSubHubEventAdapterDataHolder;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
@@ -45,8 +45,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE;
 
 
 /**
@@ -150,7 +150,7 @@ public class ClientManager {
     /**
      * Close the client.
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID.
      * @throws IOException
      */
     public void closeClient(int tenantId) throws IOException {

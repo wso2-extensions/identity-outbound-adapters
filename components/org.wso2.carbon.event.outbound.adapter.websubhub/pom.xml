@@ -31,7 +31,8 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     <name>Event Outbound Websubhub Adapter Module</name>
-    <description>org.wso2.carbon.event.outbound.adapter.websubhub provides the back-end functionality of websubhub event adapter
+    <description>org.wso2.carbon.event.outbound.adapter.websubhub provides the back-end functionality of websubhub event
+        adapter.
     </description>
 
     <dependencies>
@@ -73,36 +74,35 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
                             org.wso2.carbon.event.outbound.adapter.websubhub.internal,
-                            org.wso2.carbon.event.outbound.adapter.websubhub.internal.*
                         </Private-Package>
                         <Export-Package>
                             !org.wso2.carbon.event.outbound.adapter.websubhub.internal,
-                            !org.wso2.carbon.event.outbound.adapter.websubhub.internal.*,
                             org.wso2.carbon.event.outbound.adapter.websubhub.*
                         </Export-Package>
                         <Import-Package>
-                            javax.xml.namespace; version=0.0.0,
-                            *;resolution:=optional
+                            org.apache.commons.lang; version="${commons-lang.wso2.osgi.version.range}",
+                            org.apache.commons.logging; version="${org.apache.commons.logging.range}",
+                            org.apache.http; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.nio.conn; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.nio.reactor; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.nio.client; version="${httpasyncclient.version.range}",
+                            org.apache.http.nio.conn; version="${httpasyncclient.version.range}",
+                            org.apache.http.nio.reactor; version="${httpasyncclient.version.range}",
+                            org.apache.http.concurrent; version="${httpasyncclient.version.range}",
+                            org.apache.http.client.methods; version="${httpasyncclient.version.range}",
+                            org.apache.http.entity; version="${httpasyncclient.version.range}",
+                            org.apache.http.client.config; version="${httpasyncclient.version.range}",
+                            org.apache.http.conn.ssl; version="${httpasyncclient.version.range}",
+                            org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
+                            org.osgi.service.component; version="${osgi.service.component.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.application.authentication.framework.exception;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.core.util;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.json.simple.parser; version="${com.googlecode.json-simple.wso2.version.range}",
                         </Import-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>3.0.5</version>
-                <configuration>
-                    <effort>Max</effort>
-                    <threshold>Low</threshold>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

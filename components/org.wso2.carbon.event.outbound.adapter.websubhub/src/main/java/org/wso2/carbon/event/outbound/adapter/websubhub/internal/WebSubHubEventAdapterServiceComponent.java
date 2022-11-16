@@ -16,23 +16,23 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal.ds;
-
+package org.wso2.carbon.event.outbound.adapter.websubhub.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.wso2.carbon.event.outbound.adapter.websubhub.ClientManager;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.ClientManager;
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.services.WebSubHubAdapterServiceImpl;
+import org.wso2.carbon.event.outbound.adapter.websubhub.services.WebSubHubAdapterServiceImpl;
 
 /**
  * WebSubHub Outbound Event Adapter service component.
  */
 @Component(
-        name = "outbound.websubhub.event.adapter.service.component",
+        name = "websubhub.outbound.event.adapter.service.component",
         immediate = true)
 public class WebSubHubEventAdapterServiceComponent {
 
@@ -47,10 +47,18 @@ public class WebSubHubEventAdapterServiceComponent {
                     webSubHubEventAdapter, null);
             WebSubHubEventAdapterDataHolder.getInstance().setClientManager(new ClientManager());
             if (log.isDebugEnabled()) {
-                log.debug("Successfully deployed the websubhub event adapter service");
+                log.debug("Successfully activated the websubhub event adapter service.");
             }
         } catch (Throwable e) {
             log.error("Can not create the websubhub event adapter service: " + e.getMessage(), e);
+        }
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext context) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Successfully de-activated the websubhub event adapter service.");
         }
     }
 }

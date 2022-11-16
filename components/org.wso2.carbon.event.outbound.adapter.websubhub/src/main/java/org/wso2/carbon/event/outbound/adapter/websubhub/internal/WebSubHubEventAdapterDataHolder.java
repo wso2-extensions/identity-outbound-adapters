@@ -16,9 +16,9 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal.ds;
+package org.wso2.carbon.event.outbound.adapter.websubhub.internal;
 
-import org.wso2.carbon.event.outbound.adapter.websubhub.internal.ClientManager;
+import org.wso2.carbon.event.outbound.adapter.websubhub.ClientManager;
 
 import java.security.KeyStore;
 
@@ -32,6 +32,7 @@ public class WebSubHubEventAdapterDataHolder {
     private KeyStore trustStore;
 
     private WebSubHubEventAdapterDataHolder() {
+
     }
 
     public static WebSubHubEventAdapterDataHolder getInstance() {

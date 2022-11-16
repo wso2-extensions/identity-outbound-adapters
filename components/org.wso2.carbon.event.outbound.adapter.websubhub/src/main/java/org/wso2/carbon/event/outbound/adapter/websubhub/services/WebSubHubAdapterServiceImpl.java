@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub.internal.services;
+package org.wso2.carbon.event.outbound.adapter.websubhub.services;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -24,14 +24,16 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
-
 import java.util.Map;
 
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterConstants.ADAPTER_MESSAGE_TENANT_DOMAIN;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterUtil.buildSecurityEventToken;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.internal.util.WebSubHubEventAdapterUtil.makeAsyncAPICall;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_MESSAGE_TENANT_DOMAIN;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.buildSecurityEventToken;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.makeAsyncAPICall;
 
+/**
+ * OSGi service for publishing events using web sub hub.
+ */
 public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
 
     private static final Log log = LogFactory.getLog(WebSubHubAdapterServiceImpl.class);
@@ -65,9 +67,12 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
         // todo logic to remove the topic from the hub
     }
 
-    //TODO config read
+    /**
+     * Populate the web sub hub base url configuration.
+     */
     private void populateConfigs() {
 
+        //TODO read from the configurations.
         webSubHubBaseUrl = ADAPTER_HUB_URL;
     }
 
