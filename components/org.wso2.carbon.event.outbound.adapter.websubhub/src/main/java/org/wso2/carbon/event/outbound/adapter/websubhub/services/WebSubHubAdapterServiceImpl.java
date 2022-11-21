@@ -28,10 +28,8 @@ import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
 import java.io.IOException;
-import java.util.Map;
 
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_MESSAGE_TENANT_DOMAIN;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.DEREGISTER;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_DEREGISTERING_HUB_TOPIC;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_REGISTERING_HUB_TOPIC;
@@ -52,12 +50,12 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     private String webSubHubBaseUrl = null;
 
     @Override
-    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri, Map<String, String> propertyMap)
-            throws WebSubAdapterException {
+    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri) throws WebSubAdapterException {
 
-        String tenantDomain = propertyMap.get(ADAPTER_MESSAGE_TENANT_DOMAIN);
+        //Getting the organization name of Event Payload object since it is the tenant domain.
+        String tenantDomain = eventPayload.getOrganizationName();
         SecurityEventTokenPayload securityEventTokenPayload =
-                buildSecurityEventToken(eventPayload, eventUri, topicSuffix, tenantDomain);
+                buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
         makeAsyncAPICall(securityEventTokenPayload, tenantDomain, topicSuffix, getWebSubBaseURL());
     }
 
