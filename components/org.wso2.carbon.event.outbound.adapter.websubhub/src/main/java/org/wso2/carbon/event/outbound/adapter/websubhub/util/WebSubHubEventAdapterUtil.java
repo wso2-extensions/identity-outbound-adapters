@@ -285,11 +285,11 @@ public class WebSubHubEventAdapterUtil {
     }
 
     /**
-     * Returns a {@link WebSubAdapterClientException} on client related errors in WebSub Adapter.
+     * Returns a {@link WebSubAdapterServerException} on server related errors in WebSub Adapter.
      *
      * @param error the error enum.
      * @param data  the error related data.
-     * @return WebSubAdapterClientException
+     * @return WebSubAdapterServerException
      */
     public static WebSubAdapterServerException handleServerException(
             WebSubHubEventAdapterConstants.ErrorMessages error, Throwable throwable, String... data) {
