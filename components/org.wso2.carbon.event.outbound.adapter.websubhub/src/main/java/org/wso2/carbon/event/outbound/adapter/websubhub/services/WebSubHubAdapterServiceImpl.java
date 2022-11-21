@@ -49,7 +49,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
         }
 
         //TODO Validate that tenant domain is set
-        //Getting the organization name of Event Payload object since it is the domain name.
+        //Getting the organization name of Event Payload object since it is the tenant domain.
         String tenantDomain = eventPayload.getOrganizationName();
         SecurityEventTokenPayload securityEventTokenPayload =
                 buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
