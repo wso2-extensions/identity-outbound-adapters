@@ -22,18 +22,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
-import org.apache.http.nio.reactor.IOReactorException;
+import org.apache.http.ssl.SSLContexts;
 import org.wso2.carbon.event.outbound.adapter.websubhub.internal.WebSubHubEventAdapterDataHolder;
-import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 
@@ -43,11 +40,11 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.net.ssl.SSLContext;
 
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE;
-
 
 /**
  * Class to retrieve the HTTP Clients.
@@ -65,9 +62,9 @@ public class ClientManager {
     /**
      * Creates a client manager.
      *
-     * @throws FrameworkException
+     * @throws IOException on errors while creating the pooling connection manager.
      */
-    public ClientManager() throws FrameworkException {
+    public ClientManager() throws IOException {
 
         poolingHttpClientConnectionManager = createPoolingConnectionManager();
     }
@@ -78,7 +75,7 @@ public class ClientManager {
      * @param tenantDomain Tenant domain of the service provider.
      * @return HttpClient.
      */
-    public CloseableHttpAsyncClient getClient(String tenantDomain) throws FrameworkException, IOException {
+    public CloseableHttpAsyncClient getClient(String tenantDomain) throws IOException {
 
         int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
         CloseableHttpAsyncClient client = clientMap.get(tenantId);
@@ -105,7 +102,7 @@ public class ClientManager {
                 .build();
     }
 
-    private PoolingNHttpClientConnectionManager createPoolingConnectionManager() throws FrameworkException {
+    private PoolingNHttpClientConnectionManager createPoolingConnectionManager() throws IOException {
 
         String maxConnectionsString = IdentityUtil.getProperty(CONNECTION_POOL_MAX_CONNECTIONS);
         String maxConnectionsPerRouteString = IdentityUtil.getProperty(CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE);
@@ -132,19 +129,14 @@ public class ClientManager {
             }
         }
 
-        ConnectingIOReactor ioReactor;
-        try {
-            ioReactor = new DefaultConnectingIOReactor();
-        } catch (IOReactorException e) {
-            throw new FrameworkException("Error while creating ConnectingIOReactor", e);
-        }
-        PoolingNHttpClientConnectionManager poolingHttpClientConnectionManager = new
+        ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
+        PoolingNHttpClientConnectionManager poolingHttpClientConnectionMgr = new
                 PoolingNHttpClientConnectionManager(ioReactor);
         // Increase max total connection to 20.
-        poolingHttpClientConnectionManager.setMaxTotal(maxConnections);
+        poolingHttpClientConnectionMgr.setMaxTotal(maxConnections);
         // Increase default max connection per route to 20.
-        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
-        return poolingHttpClientConnectionManager;
+        poolingHttpClientConnectionMgr.setDefaultMaxPerRoute(maxConnectionsPerRoute);
+        return poolingHttpClientConnectionMgr;
     }
 
     /**
@@ -166,11 +158,10 @@ public class ClientManager {
 
         try {
             SSLContext sslContext = SSLContexts.custom()
-                    .loadTrustMaterial(WebSubHubEventAdapterDataHolder.getInstance().getTrustStore())
+                    .loadTrustMaterial(WebSubHubEventAdapterDataHolder.getInstance().getTrustStore(), null)
                     .build();
-            X509HostnameVerifier hostnameVerifier = SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER;
             builder.setSSLContext(sslContext);
-            builder.setHostnameVerifier(hostnameVerifier);
+            builder.setSSLHostnameVerifier(new DefaultHostnameVerifier());
 
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             LOG.error("Error while creating ssl context for WebSubHub endpoint invocation in tenant domain: " +
