@@ -22,12 +22,24 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
+import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
+import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
+import java.io.IOException;
+
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.DEREGISTER;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_DEREGISTERING_HUB_TOPIC;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_REGISTERING_HUB_TOPIC;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.REGISTER;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.buildSecurityEventToken;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.handleClientException;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.handleServerException;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.makeAsyncAPICall;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.makeTopicMgtAPICall;
 
 /**
  * OSGi service for publishing events using web sub hub.
@@ -38,32 +50,47 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     private String webSubHubBaseUrl = null;
 
     @Override
-    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri) {
+    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri) throws WebSubAdapterException {
 
-        if (StringUtils.isEmpty(webSubHubBaseUrl)) {
-            populateConfigs();
-        }
-        if (StringUtils.isEmpty(webSubHubBaseUrl)) {
-            log.warn("WebSubHub Base URL is empty. WebSubHubEventPublisher will not engage.");
-            return;
-        }
-
-        //TODO Validate that tenant domain is set
         //Getting the organization name of Event Payload object since it is the tenant domain.
         String tenantDomain = eventPayload.getOrganizationName();
         SecurityEventTokenPayload securityEventTokenPayload =
                 buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
-        makeAsyncAPICall(securityEventTokenPayload, tenantDomain, topicSuffix, webSubHubBaseUrl);
+        makeAsyncAPICall(securityEventTokenPayload, tenantDomain, topicSuffix, getWebSubBaseURL());
     }
 
     @Override
-    public void addTopic(String topic) {
-        // todo logic to add the topic into the hub
+    public void registerTopic(String topic, String tenantDomain) throws WebSubAdapterException {
+
+        try {
+            makeTopicMgtAPICall(topic, tenantDomain, getWebSubBaseURL(), REGISTER);
+        } catch (IOException e) {
+            throw handleServerException(ERROR_REGISTERING_HUB_TOPIC, e, topic, tenantDomain);
+        }
+
     }
 
     @Override
-    public void removeTopic(String topic) {
-        // todo logic to remove the topic from the hub
+    public void deregisterTopic(String topic, String tenantDomain) throws WebSubAdapterException {
+
+        try {
+            makeTopicMgtAPICall(topic, tenantDomain, getWebSubBaseURL(), DEREGISTER);
+        } catch (IOException e) {
+            throw handleServerException(ERROR_DEREGISTERING_HUB_TOPIC, e, topic, tenantDomain);
+        }
+    }
+
+    private String getWebSubBaseURL() throws WebSubAdapterClientException {
+
+        if (StringUtils.isEmpty(webSubHubBaseUrl)) {
+            populateConfigs();
+
+            if (StringUtils.isEmpty(webSubHubBaseUrl)) {
+                log.warn("WebSubHub Base URL is empty. WebSubHubEventPublisher will not engage.");
+                throw handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED);
+            }
+        }
+        return webSubHubBaseUrl;
     }
 
     /**

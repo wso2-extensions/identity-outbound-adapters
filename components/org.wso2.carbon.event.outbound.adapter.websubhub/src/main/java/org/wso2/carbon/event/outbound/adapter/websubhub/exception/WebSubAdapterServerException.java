@@ -16,19 +16,21 @@
  * under the License.
  */
 
-package org.wso2.carbon.event.outbound.adapter.websubhub;
-
-import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterException;
-import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
+package org.wso2.carbon.event.outbound.adapter.websubhub.exception;
 
 /**
- * The WebSubHub event adapter service is used to publish notification events into the intermediate hub.
+ * Exception wrapper class for WebSub Adapter exceptions.
  */
-public interface WebSubHubAdapterService {
+public class WebSubAdapterServerException extends WebSubAdapterException {
 
-    void publish(EventPayload payload, String topicSuffix, String eventUri) throws WebSubAdapterException;
+    public WebSubAdapterServerException(String message, String errorCode) {
 
-    void registerTopic(String topic, String tenantDomain) throws WebSubAdapterException;
+        super(message, errorCode);
+    }
 
-    void deregisterTopic(String topic, String tenantDomain) throws WebSubAdapterException;
+    public WebSubAdapterServerException(String message, String description, String errorCode, Throwable throwable) {
+
+        super(message, description, errorCode, throwable);
+    }
+
 }
