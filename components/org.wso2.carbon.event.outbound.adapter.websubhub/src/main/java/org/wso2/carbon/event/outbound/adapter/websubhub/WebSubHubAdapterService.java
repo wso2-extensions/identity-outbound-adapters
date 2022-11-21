@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.event.outbound.adapter.websubhub;
 
+import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 
 import java.util.Map;
@@ -27,9 +28,10 @@ import java.util.Map;
  */
 public interface WebSubHubAdapterService {
 
-    void publish(EventPayload payload, String topicSuffix, String eventUri, Map<String, String> propertyMap);
+    void publish(EventPayload payload, String topicSuffix, String eventUri, Map<String, String> propertyMap) throws
+            WebSubAdapterException;
 
-    void addTopic(String topic);
+    void registerTopic(String topic, String tenantDomain) throws WebSubAdapterException;
 
-    void removeTopic(String topic);
+    void deregisterTopic(String topic, String tenantDomain) throws WebSubAdapterException;
 }
