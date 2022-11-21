@@ -68,17 +68,16 @@ public class WebSubHubEventAdapterUtil {
      * @param eventPayload Event payload object.
      * @param eventUri     Event URI.
      * @param topic        Topic name.
-     * @param tenantDomain Tenant domain.
      * @return Security Event Token payload.
      */
     public static SecurityEventTokenPayload buildSecurityEventToken(EventPayload eventPayload, String eventUri,
-                                                                    String topic, String tenantDomain) {
+                                                                    String topic) {
 
         SecurityEventTokenPayload securityEventTokenPayload = new SecurityEventTokenPayload();
         securityEventTokenPayload.setIss(EVENT_ISSUER);
         securityEventTokenPayload.setIat(System.currentTimeMillis());
         securityEventTokenPayload.setJti(UUID.randomUUID().toString());
-        securityEventTokenPayload.setAud(getAudience(topic, tenantDomain));
+        securityEventTokenPayload.setAud(getAudience(topic, eventPayload.getOrganizationName()));
         Map<String, EventPayload> eventMap = new HashMap<>();
         eventMap.put(eventUri, eventPayload);
         securityEventTokenPayload.setEvent(eventMap);
@@ -126,7 +125,7 @@ public class WebSubHubEventAdapterUtil {
 
             if (log.isDebugEnabled()) {
                 log.debug("Publishing event data to WebSubHub. URL: " + url + " tenant domain: "
-                        + tenantDomain + " payload:");
+                        + tenantDomain);
             }
 
             client.execute(request, new FutureCallback<HttpResponse>() {

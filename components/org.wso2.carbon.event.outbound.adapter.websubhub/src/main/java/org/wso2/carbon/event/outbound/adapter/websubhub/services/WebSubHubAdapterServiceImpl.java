@@ -24,10 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
-import java.util.Map;
 
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_MESSAGE_TENANT_DOMAIN;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.buildSecurityEventToken;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.makeAsyncAPICall;
 
@@ -40,8 +38,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     private String webSubHubBaseUrl = null;
 
     @Override
-    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri,
-                        Map<String, String> propertyMap) {
+    public void publish(EventPayload eventPayload, String topicSuffix, String eventUri) {
 
         if (StringUtils.isEmpty(webSubHubBaseUrl)) {
             populateConfigs();
@@ -51,9 +48,11 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
             return;
         }
 
-        String tenantDomain = propertyMap.get(ADAPTER_MESSAGE_TENANT_DOMAIN);
+        //TODO Validate that tenant domain is set
+        //Getting the organization name of Event Payload object since it is the domain name.
+        String tenantDomain = eventPayload.getOrganizationName();
         SecurityEventTokenPayload securityEventTokenPayload =
-                buildSecurityEventToken(eventPayload, eventUri, topicSuffix, tenantDomain);
+                buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
         makeAsyncAPICall(securityEventTokenPayload, tenantDomain, topicSuffix, webSubHubBaseUrl);
     }
 
@@ -75,5 +74,4 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
         //TODO read from the configurations.
         webSubHubBaseUrl = ADAPTER_HUB_URL;
     }
-
 }

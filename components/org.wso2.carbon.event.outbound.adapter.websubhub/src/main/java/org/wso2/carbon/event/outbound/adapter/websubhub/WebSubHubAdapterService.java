@@ -20,14 +20,12 @@ package org.wso2.carbon.event.outbound.adapter.websubhub;
 
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 
-import java.util.Map;
-
 /**
  * The WebSubHub event adapter service is used to publish notification events into the intermediate hub.
  */
 public interface WebSubHubAdapterService {
 
-    void publish(EventPayload payload, String topicSuffix, String eventUri, Map<String, String> propertyMap);
+    void publish(EventPayload payload, String topicSuffix, String eventUri);
 
     void addTopic(String topic);
 
