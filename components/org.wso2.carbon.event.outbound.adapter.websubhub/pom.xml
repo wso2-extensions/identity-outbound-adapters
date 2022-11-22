@@ -98,6 +98,7 @@
                             org.apache.http.impl.nio.conn; version="${httpasyncclient.version.range}",
                             org.apache.http.impl.nio.reactor; version="${httpasyncclient.version.range}",
                             org.apache.http.impl.nio.client; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.client; version="${httpasyncclient.version.range}",
                             org.apache.http.nio.conn; version="${httpasyncclient.version.range}",
                             org.apache.http.nio.reactor; version="${httpasyncclient.version.range}",
                             org.apache.http.concurrent; version="${httpasyncclient.version.range}",
@@ -105,6 +106,7 @@
                             org.apache.http.entity; version="${httpasyncclient.version.range}",
                             org.apache.http.client.config; version="${httpasyncclient.version.range}",
                             org.apache.http.conn.ssl; version="${httpasyncclient.version.range}",
+                            org.apache.http.util; version="${httpasyncclient.version.range}",
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component; version="${osgi.service.component.imp.pkg.version.range}",
                             org.wso2.carbon.identity.application.authentication.framework.exception;
