@@ -46,17 +46,13 @@ public class WebSubHubEventAdapterUtilTest {
 
         return new Object[][]{
                 // orgId, orgName, eventUri, topic, testProperty
-                {999, "test-org", "urn:ietf:params:testEvent", "TEST-TOPIC", "test-property"},
-                {999, null, "urn:ietf:params:testEvent", "TEST-TOPIC", "test-property"},
-                {999, "test-org", null, "TEST-TOPIC", "test-property"},
-                {999, "test-org", "urn:ietf:params:testEvent", null, "test-property"},
-                {999, "test-org", "urn:ietf:params:testEvent", "TEST-TOPIC", null}
+                {999, "test-org", "urn:ietf:params:testEvent", "TEST-TOPIC", "test-property"}
         };
     }
 
-    @Test(dataProvider = "securityEventDataProvider", expectedExceptions = WebSubAdapterClientException.class)
+    @Test(dataProvider = "securityEventDataProvider")
     public void testBuildSecurityEventToken(int orgId, String orgName, String eventUri, String topic,
-                                            String testProperty) {
+                                            String testProperty) throws WebSubAdapterClientException {
 
         String ref = "https://localhot:9443/" + orgName + "/test-event";
 
@@ -64,22 +60,6 @@ public class WebSubHubEventAdapterUtilTest {
 
         SecurityEventTokenPayload securityEventTokenPayload =
                 WebSubHubEventAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
-
-        if (orgName == null) {
-            Assert.fail("Error expected for null orgName.");
-        }
-
-        if (eventUri == null) {
-            Assert.fail("Error expected for null event URI.");
-        }
-
-        if (topic == null) {
-            Assert.fail("Error expected for null topic.");
-        }
-
-        if (testEvenPayload == null) {
-            Assert.fail("Error expected for null event payload.");
-        }
 
         assertNotNull(securityEventTokenPayload);
         assertEquals(securityEventTokenPayload.getIss(), WebSubHubEventAdapterConstants.EVENT_ISSUER);
@@ -100,6 +80,45 @@ public class WebSubHubEventAdapterUtilTest {
 
         TestEventPayload testEventPayload = (TestEventPayload) eventPayload;
         Assert.assertEquals(testEventPayload.getTestProperty(), testProperty);
+    }
+
+    @DataProvider(name = "errorSecurityEventDataProvider")
+    public Object[][] provideErrorSecurityEventData() {
+
+        return new Object[][]{
+                // orgId, orgName, eventUri, topic, testProperty
+                {999, null, "urn:ietf:params:testEvent", "TEST-TOPIC", "test-property"},
+                {999, "test-org", null, "TEST-TOPIC", "test-property"},
+                {999, "test-org", "urn:ietf:params:testEvent", null, "test-property"},
+                {999, "test-org", "urn:ietf:params:testEvent", "TEST-TOPIC", null}
+        };
+    }
+
+    @Test(dataProvider = "errorSecurityEventDataProvider", expectedExceptions = WebSubAdapterClientException.class)
+    public void testBuildSecurityEventTokenError(int orgId, String orgName, String eventUri, String topic,
+                                            String testProperty) throws WebSubAdapterClientException {
+
+        String ref = "https://localhot:9443/" + orgName + "/test-event";
+
+        EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
+
+        WebSubHubEventAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
+
+        if (orgName == null) {
+            Assert.fail("Error expected for null orgName.");
+        }
+
+        if (eventUri == null) {
+            Assert.fail("Error expected for null event URI.");
+        }
+
+        if (topic == null) {
+            Assert.fail("Error expected for null topic.");
+        }
+
+        if (testEvenPayload == null) {
+            Assert.fail("Error expected for null event payload.");
+        }
     }
 
     private static EventPayload getEventPayload(int orgId, String orgName, String testProperty, String ref) {

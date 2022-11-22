@@ -20,6 +20,7 @@ package org.wso2.carbon.event.outbound.adapter.websubhub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
@@ -60,8 +61,12 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.EVENT_ISSUER;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_GETTING_ASYNC_CLIENT;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_URI;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_NO_RESPONSE_FROM_WEBSUB_HUB;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.HUB_MODE;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.HUB_TOPIC;
@@ -92,7 +97,23 @@ public class WebSubHubEventAdapterUtil {
      * @return Security Event Token payload.
      */
     public static SecurityEventTokenPayload buildSecurityEventToken(EventPayload eventPayload, String eventUri,
-                                                                    String topic) {
+                                                                    String topic) throws WebSubAdapterClientException {
+
+        if (eventPayload == null) {
+            throw handleClientException(ERROR_NULL_EVENT_PAYLOAD);
+        }
+
+        if (StringUtils.isEmpty(eventUri)) {
+            throw handleClientException(ERROR_INVALID_EVENT_URI);
+        }
+
+        if (StringUtils.isEmpty(topic)) {
+            throw handleClientException(ERROR_INVALID_EVENT_TOPIC);
+        }
+
+        if (StringUtils.isEmpty(eventPayload.getOrganizationName())) {
+            throw handleClientException(ERROR_INVALID_EVENT_ORGANIZATION_NAME);
+        }
 
         SecurityEventTokenPayload securityEventTokenPayload = new SecurityEventTokenPayload();
         securityEventTokenPayload.setIss(EVENT_ISSUER);

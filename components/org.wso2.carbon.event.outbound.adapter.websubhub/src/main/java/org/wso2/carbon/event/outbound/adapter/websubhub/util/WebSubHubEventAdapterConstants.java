@@ -55,8 +55,13 @@ public class WebSubHubEventAdapterConstants {
         //client errors.
         WEB_SUB_BASE_URL_NOT_CONFIGURED("0001", "WebSub Hub base URL is not configured.",
                 "WebSub Hub base URL is not configured."),
-        ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD("0001", "Invalid payload provided.",
+        ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD("0002", "Invalid payload provided.",
                 "Event payload cannot be processed."),
+        ERROR_NULL_EVENT_PAYLOAD("003", "Invalid event payload input ", "Event payload input cannot be null."),
+        ERROR_INVALID_EVENT_URI("004", "Invalid event URI input", "Event URI input cannot be null or empty."),
+        ERROR_INVALID_EVENT_TOPIC("005", "Invalid event topic input", "Event topic input cannot be null or empty."),
+        ERROR_INVALID_EVENT_ORGANIZATION_NAME("006", "Invalid organization name input",
+                "Event organization name input cannot be null or empty"),
 
         //server errors.
         ERROR_REGISTERING_HUB_TOPIC("65001", "Error registering WebSub Hub topic.",
