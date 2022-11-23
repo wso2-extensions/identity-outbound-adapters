@@ -197,7 +197,7 @@ public class WebSubHubEventAdapterUtil {
                             JSONObject json = (JSONObject) parser.parse(jsonString);
                             log.debug("Response data: " + json);
                         } catch (IOException | ParseException e) {
-                            log.error("Error while reading WebSubHub event publisher response. " + e);
+                            log.error("Error while reading WebSubHub event publisher response. ", e);
                         }
                     }
                 } else {
@@ -209,7 +209,7 @@ public class WebSubHubEventAdapterUtil {
                         JSONObject json = (JSONObject) parser.parse(jsonString);
                         log.error("Response data: " + json);
                     } catch (IOException | ParseException e) {
-                        log.error("Error while reading WebSubHub event publisher response. " + e);
+                        log.error("Error while reading WebSubHub event publisher response. ", e);
                     }
                 }
             }
@@ -217,7 +217,7 @@ public class WebSubHubEventAdapterUtil {
             @Override
             public void failed(final Exception ex) {
 
-                log.error("Publishing event data to WebSubHub failed. " + ex);
+                log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
             @Override
