@@ -38,7 +38,7 @@ public class WebSubHubEventAdapterConstants {
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
     public static final String CONNECTION_POOL_MAX_CONNECTIONS = "AdaptiveAuth.MaxTotalConnections";
     public static final String CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE = "AdaptiveAuth.MaxTotalConnectionsPerRoute";
-    public static final String ADAPTER_HUB_URL_NAME = "webSubHubBaseUrl";
+    public static final String ADAPTER_HUB_URL_CONFIG = "adapter.websub.baseUrl";
     public static final String ADAPTER_HUB_URL = "http://localhost:9090/hub";
 
     private static final String WEB_SUB_ADAPTER_ERROR_CODE_PREFIX = "WEBSUB-";
@@ -62,6 +62,8 @@ public class WebSubHubEventAdapterConstants {
         ERROR_INVALID_EVENT_TOPIC("005", "Invalid event topic input", "Event topic input cannot be null or empty."),
         ERROR_INVALID_EVENT_ORGANIZATION_NAME("006", "Invalid organization name input",
                 "Event organization name input cannot be null or empty"),
+        ERROR_WEB_SUB_BASE_URL_NOT_CONFIGURED("007", "Base url for WebSub Hub is not configured.",
+                "Base URL for WebSub Hub is not configured."),
 
         //server errors.
         ERROR_REGISTERING_HUB_TOPIC("65001", "Error registering WebSub Hub topic.",
@@ -74,8 +76,10 @@ public class WebSubHubEventAdapterConstants {
                 "Invalid response received from WebSub Hub, topic: %s, operation: %s, payload: %s."),
         ERROR_NO_RESPONSE_FROM_WEBSUB_HUB("65005", "No Response from WebSub Hub.",
                 "Didn't receive response from WebSub Hub, topic: %s, operation: %s."),
-        ERROR_GETTING_ASYNC_CLIENT("65005", "Error getting the async client to publish events.",
-                "Error preparing async client to publish events, tenant: %s.");
+        ERROR_GETTING_ASYNC_CLIENT("65006", "Error getting the async client to publish events.",
+                "Error preparing async client to publish events, tenant: %s."),
+        ERROR_RETRIEVING_WEB_SUB_BASE_URL_CONFIG("65007", "Error retrieving WebSub Hub base URL.",
+                "Server error encountered while retrieving the WebSub Hub base URL from config.");
 
         private final String code;
         private final String message;

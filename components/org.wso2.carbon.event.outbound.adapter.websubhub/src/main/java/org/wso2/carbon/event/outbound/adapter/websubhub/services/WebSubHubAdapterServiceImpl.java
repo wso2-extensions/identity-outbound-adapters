@@ -22,17 +22,19 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
-import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
 import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
+import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfiguration;
+import org.wso2.identity.outbound.adapter.common.exception.AdapterConfigurationException;
 
 import java.io.IOException;
 
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL_CONFIG;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.DEREGISTER;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_DEREGISTERING_HUB_TOPIC;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_REGISTERING_HUB_TOPIC;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_RETRIEVING_WEB_SUB_BASE_URL_CONFIG;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.REGISTER;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.buildSecurityEventToken;
@@ -80,7 +82,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
         }
     }
 
-    private String getWebSubBaseURL() throws WebSubAdapterClientException {
+    private String getWebSubBaseURL() throws WebSubAdapterException {
 
         if (StringUtils.isEmpty(webSubHubBaseUrl)) {
             populateConfigs();
@@ -96,9 +98,13 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     /**
      * Populate the web sub hub base url configuration.
      */
-    private void populateConfigs() {
+    private void populateConfigs() throws WebSubAdapterException {
 
-        //TODO read from the configurations.
-        webSubHubBaseUrl = ADAPTER_HUB_URL;
+        try {
+            webSubHubBaseUrl = OutboundAdapterConfiguration.getInstance().getProperty(ADAPTER_HUB_URL_CONFIG)
+                    .orElseThrow(() -> handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED));
+        } catch (AdapterConfigurationException e) {
+            throw handleServerException(ERROR_RETRIEVING_WEB_SUB_BASE_URL_CONFIG, e);
+        }
     }
 }
