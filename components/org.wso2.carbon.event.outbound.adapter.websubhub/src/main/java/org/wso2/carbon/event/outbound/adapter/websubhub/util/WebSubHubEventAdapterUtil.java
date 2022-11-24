@@ -72,7 +72,6 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.HUB_TOPIC;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.PUBLISH;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.TOPIC_SEPARATOR;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.URL_SEPARATOR;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants.ContentTypes.TYPE_APPLICATION_JSON;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
@@ -150,7 +149,7 @@ public class WebSubHubEventAdapterUtil {
     public static void makeAsyncAPICall(SecurityEventTokenPayload securityEventTokenPayload, String tenantDomain,
                                         String topic, String webSubHubBaseUrl) throws WebSubAdapterException {
 
-        String url = buildURL(topic, tenantDomain, webSubHubBaseUrl, PUBLISH);
+        String url = buildURL(topic, webSubHubBaseUrl, PUBLISH);
 
         HttpPost request = new HttpPost(url);
         request.setHeader(ACCEPT, TYPE_APPLICATION_JSON);
@@ -232,7 +231,7 @@ public class WebSubHubEventAdapterUtil {
     public static void makeTopicMgtAPICall(String topic, String tenantDomain, String webSubHubBaseUrl, String operation)
             throws IOException, WebSubAdapterServerException {
 
-        String topicMgtUrl = buildURL(topic, tenantDomain, webSubHubBaseUrl, operation);
+        String topicMgtUrl = buildURL(topic, webSubHubBaseUrl, operation);
 
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().useSystemProperties().build()) {
 
@@ -266,15 +265,14 @@ public class WebSubHubEventAdapterUtil {
      * Build url which is used to publish events of the given tenant domain and topic.
      *
      * @param topic            Topic name.
-     * @param tenantDomain     Tenant domain.
      * @param webSubHubBaseUrl Web sub hub base url.
      * @return Url to publish the event.
      */
-    private static String buildURL(String topic, String tenantDomain, String webSubHubBaseUrl, String operation) {
+    private static String buildURL(String topic, String webSubHubBaseUrl, String operation) {
 
         return webSubHubBaseUrl + "?" +
                 HUB_MODE + "=" + operation + "&" +
-                HUB_TOPIC + "=" + tenantDomain + TOPIC_SEPARATOR + topic;
+                HUB_TOPIC + "=" + topic;
     }
 
     /**

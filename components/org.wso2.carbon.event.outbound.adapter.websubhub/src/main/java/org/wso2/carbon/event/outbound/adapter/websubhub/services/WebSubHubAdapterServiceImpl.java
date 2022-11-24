@@ -35,6 +35,7 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_REGISTERING_HUB_TOPIC;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.REGISTER;
+import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.TOPIC_SEPARATOR;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.buildSecurityEventToken;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.handleClientException;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.handleServerException;
@@ -56,27 +57,30 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
         String tenantDomain = eventPayload.getOrganizationName();
         SecurityEventTokenPayload securityEventTokenPayload =
                 buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
-        makeAsyncAPICall(securityEventTokenPayload, tenantDomain, topicSuffix, getWebSubBaseURL());
+        makeAsyncAPICall(securityEventTokenPayload, tenantDomain, constructHubTopic(topicSuffix, tenantDomain)
+                , getWebSubBaseURL());
     }
 
     @Override
-    public void registerTopic(String topic, String tenantDomain) throws WebSubAdapterException {
+    public void registerTopic(String topicSuffix, String tenantDomain) throws WebSubAdapterException {
 
         try {
-            makeTopicMgtAPICall(topic, tenantDomain, getWebSubBaseURL(), REGISTER);
+            makeTopicMgtAPICall(constructHubTopic(topicSuffix, tenantDomain), tenantDomain,
+                    getWebSubBaseURL(), REGISTER);
         } catch (IOException e) {
-            throw handleServerException(ERROR_REGISTERING_HUB_TOPIC, e, topic, tenantDomain);
+            throw handleServerException(ERROR_REGISTERING_HUB_TOPIC, e, topicSuffix, tenantDomain);
         }
 
     }
 
     @Override
-    public void deregisterTopic(String topic, String tenantDomain) throws WebSubAdapterException {
+    public void deregisterTopic(String topicSuffix, String tenantDomain) throws WebSubAdapterException {
 
         try {
-            makeTopicMgtAPICall(topic, tenantDomain, getWebSubBaseURL(), DEREGISTER);
+            makeTopicMgtAPICall(constructHubTopic(topicSuffix, tenantDomain), tenantDomain,
+                    getWebSubBaseURL(), DEREGISTER);
         } catch (IOException e) {
-            throw handleServerException(ERROR_DEREGISTERING_HUB_TOPIC, e, topic, tenantDomain);
+            throw handleServerException(ERROR_DEREGISTERING_HUB_TOPIC, e, topicSuffix, tenantDomain);
         }
     }
 
@@ -100,5 +104,10 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
 
         //TODO read from the configurations.
         webSubHubBaseUrl = ADAPTER_HUB_URL;
+    }
+
+    private String constructHubTopic(String topicSuffix, String tenantDomain) {
+
+        return tenantDomain + TOPIC_SEPARATOR + topicSuffix;
     }
 }
