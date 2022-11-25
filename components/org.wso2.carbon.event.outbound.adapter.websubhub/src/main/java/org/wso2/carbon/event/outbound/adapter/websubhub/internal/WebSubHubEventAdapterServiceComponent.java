@@ -26,13 +26,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.wso2.carbon.event.outbound.adapter.websubhub.ClientManager;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
+import org.wso2.carbon.event.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 import org.wso2.carbon.event.outbound.adapter.websubhub.services.WebSubHubAdapterServiceImpl;
+import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 
 /**
  * WebSubHub Outbound Event Adapter service component.
  */
 @Component(
-        name = "websubhub.outbound.event.adapter.service.component",
+        name = "websubhub.outbound.adapter.service.component",
         immediate = true)
 public class WebSubHubEventAdapterServiceComponent {
 
@@ -46,11 +48,13 @@ public class WebSubHubEventAdapterServiceComponent {
             context.getBundleContext().registerService(WebSubHubAdapterService.class.getName(),
                     webSubHubEventAdapter, null);
             WebSubHubEventAdapterDataHolder.getInstance().setClientManager(new ClientManager());
+            WebSubHubEventAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
+                    OutboundAdapterConfigurationProvider.getInstance()));
             if (log.isDebugEnabled()) {
-                log.debug("Successfully activated the websubhub event adapter service.");
+                log.debug("Successfully activated the WebSub Hub adapter service.");
             }
         } catch (Throwable e) {
-            log.error("Can not create the websubhub event adapter service: " + e.getMessage(), e);
+            log.error("Can not activate the WebSub Hub adapter service: " + e.getMessage(), e);
         }
     }
 
@@ -58,7 +62,7 @@ public class WebSubHubEventAdapterServiceComponent {
     protected void deactivate(ComponentContext context) {
 
         if (log.isDebugEnabled()) {
-            log.debug("Successfully de-activated the websubhub event adapter service.");
+            log.debug("Successfully de-activated the WebSub Hub adapter service.");
         }
     }
 }

@@ -22,14 +22,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.outbound.adapter.websubhub.WebSubHubAdapterService;
-import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
 import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterException;
+import org.wso2.carbon.event.outbound.adapter.websubhub.internal.WebSubHubEventAdapterDataHolder;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.carbon.event.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
 import java.io.IOException;
 
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.DEREGISTER;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_DEREGISTERING_HUB_TOPIC;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.ERROR_REGISTERING_HUB_TOPIC;
@@ -53,22 +52,29 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     @Override
     public void publish(EventPayload eventPayload, String topicSuffix, String eventUri) throws WebSubAdapterException {
 
-        //Getting the organization name of Event Payload object since it is the tenant domain.
-        String tenantDomain = eventPayload.getOrganizationName();
-        SecurityEventTokenPayload securityEventTokenPayload =
-                buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
-        makeAsyncAPICall(securityEventTokenPayload, tenantDomain, constructHubTopic(topicSuffix, tenantDomain)
-                , getWebSubBaseURL());
+        if (WebSubHubEventAdapterDataHolder.getInstance().getAdapterConfiguration().isAdapterEnabled()) {
+            //Getting the organization name of Event Payload object since it is the tenant domain.
+            String tenantDomain = eventPayload.getOrganizationName();
+            SecurityEventTokenPayload securityEventTokenPayload =
+                    buildSecurityEventToken(eventPayload, eventUri, topicSuffix);
+            makeAsyncAPICall(securityEventTokenPayload, tenantDomain, constructHubTopic(topicSuffix, tenantDomain)
+                    , getWebSubBaseURL());
+        } else {
+            log.warn("Event cannot be published, WebSub Hub Adapter is not enabled.");
+        }
     }
 
     @Override
     public void registerTopic(String topicSuffix, String tenantDomain) throws WebSubAdapterException {
 
-        try {
-            makeTopicMgtAPICall(constructHubTopic(topicSuffix, tenantDomain), tenantDomain,
-                    getWebSubBaseURL(), REGISTER);
-        } catch (IOException e) {
-            throw handleServerException(ERROR_REGISTERING_HUB_TOPIC, e, topicSuffix, tenantDomain);
+        if (WebSubHubEventAdapterDataHolder.getInstance().getAdapterConfiguration().isAdapterEnabled()) {
+            try {
+                makeTopicMgtAPICall(constructHubTopic(topicSuffix, tenantDomain), getWebSubBaseURL(), REGISTER);
+            } catch (IOException e) {
+                throw handleServerException(ERROR_REGISTERING_HUB_TOPIC, e, topicSuffix, tenantDomain);
+            }
+        } else {
+            log.warn("WebSub Hub Topic cannot be registered, WebSub Hub Adapter is not enabled.");
         }
 
     }
@@ -76,34 +82,31 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
     @Override
     public void deregisterTopic(String topicSuffix, String tenantDomain) throws WebSubAdapterException {
 
-        try {
-            makeTopicMgtAPICall(constructHubTopic(topicSuffix, tenantDomain), tenantDomain,
-                    getWebSubBaseURL(), DEREGISTER);
-        } catch (IOException e) {
-            throw handleServerException(ERROR_DEREGISTERING_HUB_TOPIC, e, topicSuffix, tenantDomain);
+        if (WebSubHubEventAdapterDataHolder.getInstance().getAdapterConfiguration().isAdapterEnabled()) {
+            try {
+                makeTopicMgtAPICall(constructHubTopic(topicSuffix, tenantDomain), getWebSubBaseURL(), DEREGISTER);
+            } catch (IOException e) {
+                throw handleServerException(ERROR_DEREGISTERING_HUB_TOPIC, e, topicSuffix, tenantDomain);
+            }
+        } else {
+            log.warn("WebSub Hub Topic cannot be de-registered, WebSub Hub Adapter is not enabled.");
         }
     }
 
-    private String getWebSubBaseURL() throws WebSubAdapterClientException {
+    private String getWebSubBaseURL() throws WebSubAdapterException {
 
         if (StringUtils.isEmpty(webSubHubBaseUrl)) {
-            populateConfigs();
+            webSubHubBaseUrl =
+                    WebSubHubEventAdapterDataHolder.getInstance().getAdapterConfiguration().getWebSubHubBaseUrl();
 
+            // At this point, url shouldn't be null since if adapter is enabled, url is mandatory to configured.
+            // But adding this as a second level verification.
             if (StringUtils.isEmpty(webSubHubBaseUrl)) {
                 log.warn("WebSubHub Base URL is empty. WebSubHubEventPublisher will not engage.");
                 throw handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED);
             }
         }
         return webSubHubBaseUrl;
-    }
-
-    /**
-     * Populate the web sub hub base url configuration.
-     */
-    private void populateConfigs() {
-
-        //TODO read from the configurations.
-        webSubHubBaseUrl = ADAPTER_HUB_URL;
     }
 
     private String constructHubTopic(String topicSuffix, String tenantDomain) {

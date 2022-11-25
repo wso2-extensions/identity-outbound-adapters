@@ -73,7 +73,6 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.PUBLISH;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.URL_SEPARATOR;
-import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants.ContentTypes.TYPE_APPLICATION_JSON;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 
 /**
@@ -152,8 +151,8 @@ public class WebSubHubEventAdapterUtil {
         String url = buildURL(topic, webSubHubBaseUrl, PUBLISH);
 
         HttpPost request = new HttpPost(url);
-        request.setHeader(ACCEPT, TYPE_APPLICATION_JSON);
-        request.setHeader(CONTENT_TYPE, TYPE_APPLICATION_JSON);
+        request.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
+        request.setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
         request.setHeader(CORRELATION_ID_REQUEST_HEADER, getCorrelationID());
 
         ObjectMapper mapper = new ObjectMapper();
@@ -228,7 +227,7 @@ public class WebSubHubEventAdapterUtil {
 
     }
 
-    public static void makeTopicMgtAPICall(String topic, String tenantDomain, String webSubHubBaseUrl, String operation)
+    public static void makeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation)
             throws IOException, WebSubAdapterServerException {
 
         String topicMgtUrl = buildURL(topic, webSubHubBaseUrl, operation);
@@ -244,8 +243,7 @@ public class WebSubHubEventAdapterUtil {
                         String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
                         if (RESPONSE_FOR_SUCCESSFUL_OPERATION.equals(responseString)) {
                             if (log.isDebugEnabled()) {
-                                log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic +
-                                        " for tenant: " + tenantDomain);
+                                log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic);
                             }
                         } else {
                             throw handleServerException(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB, null, topic, operation,
