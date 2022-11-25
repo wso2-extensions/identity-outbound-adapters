@@ -38,6 +38,7 @@ public class WebSubHubEventAdapterConstants {
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
     public static final String CONNECTION_POOL_MAX_CONNECTIONS = "AdaptiveAuth.MaxTotalConnections";
     public static final String CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE = "AdaptiveAuth.MaxTotalConnectionsPerRoute";
+    public static final String ADAPTER_ENABLED_CONFIG = "adapter.websub.enabled";
     public static final String ADAPTER_HUB_URL_CONFIG = "adapter.websub.baseUrl";
     public static final String ADAPTER_HUB_URL = "http://localhost:9090/hub";
 

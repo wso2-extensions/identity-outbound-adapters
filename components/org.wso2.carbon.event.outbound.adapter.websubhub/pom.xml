@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>com.wso2.identity.outbound.adapters</groupId>
-            <artifactId>org.wso2.carbon.identity.outbound.adapter.common</artifactId>
+            <artifactId>org.wso2.identity.outbound.adapter.common</artifactId>
         </dependency>
 
         <!--Test dependencies-->
@@ -118,8 +118,10 @@
                             org.wso2.carbon.identity.core.util;
                             version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.json.simple.parser; version="${com.googlecode.json-simple.wso2.version.range}",
-                            org.wso2.identity.outbound.adapter.common;version="${identity.outbound.adapter.version.range}",
-                            org.wso2.identity.outbound.adapter.common.exception;version="${identity.outbound.adapter.version.range}",
+                            org.wso2.identity.outbound.adapter.common;
+                            version="${identity.outbound.adapter.version.range}",
+                            org.wso2.identity.outbound.adapter.common.exception;
+                            version="${identity.outbound.adapter.version.range}",
                         </Import-Package>
                     </instructions>
                 </configuration>

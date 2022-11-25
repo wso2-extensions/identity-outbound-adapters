@@ -18,9 +18,7 @@
 
 package org.wso2.identity.outbound.adapter.common;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.identity.outbound.adapter.common.exception.AdapterConfigurationException;
 
 import java.io.IOException;
@@ -39,21 +37,25 @@ import static java.util.Optional.ofNullable;
 /**
  * Class to build the output adapter configurations.
  */
-public class OutboundAdapterConfiguration {
+public class OutboundAdapterConfigurationProvider {
 
     private static final String CONFIG_FILE_NAME = "identity-outbound-adapter.properties";
-    private static OutboundAdapterConfiguration instance;
+    private static final String CARBON_HOME = "carbon.home";
+    private static final String REPOSITORY_DIR = "repository";
+    private static final String CONF_DIR = "conf";
+    private static final String IDENTITY_DIR = "identity";
+    private static OutboundAdapterConfigurationProvider instance;
     private final Properties adapterProperties;
 
-    private OutboundAdapterConfiguration() throws AdapterConfigurationException {
+    private OutboundAdapterConfigurationProvider() throws AdapterConfigurationException {
 
         adapterProperties = this.loadProperties();
     }
 
-    public static OutboundAdapterConfiguration getInstance() throws AdapterConfigurationException {
+    public static OutboundAdapterConfigurationProvider getInstance() throws AdapterConfigurationException {
 
         if (instance == null) {
-            instance = new OutboundAdapterConfiguration();
+            instance = new OutboundAdapterConfigurationProvider();
         }
         return instance;
     }
@@ -62,7 +64,8 @@ public class OutboundAdapterConfiguration {
 
         Properties properties = new Properties();
 
-        Path path = Paths.get(FilenameUtils.getName(IdentityUtil.getIdentityConfigDirPath())).resolve(CONFIG_FILE_NAME);
+        Path path = Paths.get(System.getProperty(CARBON_HOME), REPOSITORY_DIR, CONF_DIR, IDENTITY_DIR)
+                .resolve(CONFIG_FILE_NAME);
 
         if (Files.notExists(path)) {
             throw new AdapterConfigurationException(CONFIG_FILE_NAME + " configuration file doesn't exist.");

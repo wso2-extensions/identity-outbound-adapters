@@ -19,6 +19,7 @@
 package org.wso2.carbon.event.outbound.adapter.websubhub.internal;
 
 import org.wso2.carbon.event.outbound.adapter.websubhub.ClientManager;
+import org.wso2.carbon.event.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 
 import java.security.KeyStore;
 
@@ -30,6 +31,7 @@ public class WebSubHubEventAdapterDataHolder {
     private static final WebSubHubEventAdapterDataHolder instance = new WebSubHubEventAdapterDataHolder();
     private ClientManager clientManager;
     private KeyStore trustStore;
+    private WebSubAdapterConfiguration adapterConfiguration;
 
     private WebSubHubEventAdapterDataHolder() {
 
@@ -58,5 +60,15 @@ public class WebSubHubEventAdapterDataHolder {
     public void setTrustStore(KeyStore trustStore) {
 
         this.trustStore = trustStore;
+    }
+
+    public WebSubAdapterConfiguration getAdapterConfiguration() {
+
+        return adapterConfiguration;
+    }
+
+    public void setAdapterConfiguration(WebSubAdapterConfiguration adapterConfiguration) {
+
+        this.adapterConfiguration = adapterConfiguration;
     }
 }

@@ -74,7 +74,6 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.TOPIC_SEPARATOR;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.URL_SEPARATOR;
-import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants.ContentTypes.TYPE_APPLICATION_JSON;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 
 /**
@@ -153,8 +152,8 @@ public class WebSubHubEventAdapterUtil {
         String url = buildURL(topic, tenantDomain, webSubHubBaseUrl, PUBLISH);
 
         HttpPost request = new HttpPost(url);
-        request.setHeader(ACCEPT, TYPE_APPLICATION_JSON);
-        request.setHeader(CONTENT_TYPE, TYPE_APPLICATION_JSON);
+        request.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
+        request.setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
         request.setHeader(CORRELATION_ID_REQUEST_HEADER, getCorrelationID());
 
         ObjectMapper mapper = new ObjectMapper();

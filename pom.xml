@@ -81,7 +81,7 @@
             </dependency>
             <dependency>
                 <groupId>com.wso2.identity.outbound.adapters</groupId>
-                <artifactId>org.wso2.carbon.identity.outbound.adapter.common</artifactId>
+                <artifactId>org.wso2.identity.outbound.adapter.common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
