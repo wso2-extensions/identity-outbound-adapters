@@ -26,9 +26,31 @@ import org.wso2.carbon.event.outbound.adapter.websubhub.model.EventPayload;
  */
 public interface WebSubHubAdapterService {
 
+    /**
+     * Publish a given event to the intermediate hub.
+     *
+     * @param payload      Event payload.
+     * @param topicSuffix  Suffix of the hub topic.
+     * @param eventUri     URI of the event.
+     * @throws  WebSubAdapterException
+     */
     void publish(EventPayload payload, String topicSuffix, String eventUri) throws WebSubAdapterException;
 
-    void registerTopic(String topic, String tenantDomain) throws WebSubAdapterException;
+    /**
+     * Register a given topic in the intermediate hub.
+     *
+     * @param topicSuffix  Suffix of the hub topic.
+     * @param tenantDomain Tenant domain.
+     * @throws  WebSubAdapterException
+     */
+    void registerTopic(String topicSuffix, String tenantDomain) throws WebSubAdapterException;
 
-    void deregisterTopic(String topic, String tenantDomain) throws WebSubAdapterException;
+    /**
+     * Deregister a given topic from the intermediate hub.
+     *
+     * @param topicSuffix  Suffix of the hub topic.
+     * @param tenantDomain Tenant domain.
+     * @throws  WebSubAdapterException
+     */
+    void deregisterTopic(String topicSuffix, String tenantDomain) throws WebSubAdapterException;
 }

@@ -72,7 +72,6 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.HUB_TOPIC;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.PUBLISH;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.TOPIC_SEPARATOR;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.URL_SEPARATOR;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 
@@ -149,7 +148,7 @@ public class WebSubHubEventAdapterUtil {
     public static void makeAsyncAPICall(SecurityEventTokenPayload securityEventTokenPayload, String tenantDomain,
                                         String topic, String webSubHubBaseUrl) throws WebSubAdapterException {
 
-        String url = buildURL(topic, tenantDomain, webSubHubBaseUrl, PUBLISH);
+        String url = buildURL(topic, webSubHubBaseUrl, PUBLISH);
 
         HttpPost request = new HttpPost(url);
         request.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
@@ -196,7 +195,7 @@ public class WebSubHubEventAdapterUtil {
                             JSONObject json = (JSONObject) parser.parse(jsonString);
                             log.debug("Response data: " + json);
                         } catch (IOException | ParseException e) {
-                            log.error("Error while reading WebSubHub event publisher response. " + e);
+                            log.debug("Error while reading WebSubHub event publisher response. ", e);
                         }
                     }
                 } else {
@@ -208,7 +207,7 @@ public class WebSubHubEventAdapterUtil {
                         JSONObject json = (JSONObject) parser.parse(jsonString);
                         log.error("Response data: " + json);
                     } catch (IOException | ParseException e) {
-                        log.error("Error while reading WebSubHub event publisher response. " + e);
+                        log.error("Error while reading WebSubHub event publisher response. ", e);
                     }
                 }
             }
@@ -216,7 +215,7 @@ public class WebSubHubEventAdapterUtil {
             @Override
             public void failed(final Exception ex) {
 
-                log.error("Publishing event data to WebSubHub failed. " + ex);
+                log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
             @Override
@@ -228,10 +227,10 @@ public class WebSubHubEventAdapterUtil {
 
     }
 
-    public static void makeTopicMgtAPICall(String topic, String tenantDomain, String webSubHubBaseUrl, String operation)
+    public static void makeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation)
             throws IOException, WebSubAdapterServerException {
 
-        String topicMgtUrl = buildURL(topic, tenantDomain, webSubHubBaseUrl, operation);
+        String topicMgtUrl = buildURL(topic, webSubHubBaseUrl, operation);
 
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().useSystemProperties().build()) {
 
@@ -244,8 +243,7 @@ public class WebSubHubEventAdapterUtil {
                         String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
                         if (RESPONSE_FOR_SUCCESSFUL_OPERATION.equals(responseString)) {
                             if (log.isDebugEnabled()) {
-                                log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic +
-                                        " for tenant: " + tenantDomain);
+                                log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic);
                             }
                         } else {
                             throw handleServerException(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB, null, topic, operation,
@@ -265,15 +263,14 @@ public class WebSubHubEventAdapterUtil {
      * Build url which is used to publish events of the given tenant domain and topic.
      *
      * @param topic            Topic name.
-     * @param tenantDomain     Tenant domain.
      * @param webSubHubBaseUrl Web sub hub base url.
      * @return Url to publish the event.
      */
-    private static String buildURL(String topic, String tenantDomain, String webSubHubBaseUrl, String operation) {
+    private static String buildURL(String topic, String webSubHubBaseUrl, String operation) {
 
         return webSubHubBaseUrl + "?" +
                 HUB_MODE + "=" + operation + "&" +
-                HUB_TOPIC + "=" + tenantDomain + TOPIC_SEPARATOR + topic;
+                HUB_TOPIC + "=" + topic;
     }
 
     /**

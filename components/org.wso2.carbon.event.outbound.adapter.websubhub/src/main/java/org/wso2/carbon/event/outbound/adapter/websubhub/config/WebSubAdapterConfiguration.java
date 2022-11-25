@@ -21,8 +21,6 @@ package org.wso2.carbon.event.outbound.adapter.websubhub.config;
 import org.wso2.carbon.event.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_ENABLED_CONFIG;
-import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ADAPTER_HUB_URL_CONFIG;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
 import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEventAdapterUtil.handleClientException;
 
@@ -30,6 +28,9 @@ import static org.wso2.carbon.event.outbound.adapter.websubhub.util.WebSubHubEve
  * WebSub Adapter Configuration.
  */
 public class WebSubAdapterConfiguration {
+
+    private static final String ADAPTER_ENABLED_CONFIG = "adapter.websub.enabled";
+    private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websub.baseUrl";
 
     private boolean adapterEnabled;
 
