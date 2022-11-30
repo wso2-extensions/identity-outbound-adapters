@@ -22,7 +22,7 @@
 
     <test name="WebSubHubEventAdapterTests" preserve-order="true" parallel="false">
         <classes>
-            <class name="org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterUtilTest"/>
+            <class name="org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProviderTest"/>
         </classes>
     </test>
 </suite>

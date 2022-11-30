@@ -18,7 +18,9 @@
 
 package org.wso2.identity.outbound.adapter.common;
 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.lang.StringUtils;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.identity.outbound.adapter.common.exception.AdapterConfigurationException;
 
 import java.io.IOException;
@@ -33,17 +35,13 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.util.Optional.ofNullable;
+import static org.wso2.identity.outbound.adapter.common.util.OutboundAdapterConstants.CONFIG_FILE_NAME;
 
 /**
  * Class to build the output adapter configurations.
  */
 public class OutboundAdapterConfigurationProvider {
 
-    private static final String CONFIG_FILE_NAME = "identity-outbound-adapter.properties";
-    private static final String CARBON_HOME = "carbon.home";
-    private static final String REPOSITORY_DIR = "repository";
-    private static final String CONF_DIR = "conf";
-    private static final String IDENTITY_DIR = "identity";
     private static OutboundAdapterConfigurationProvider instance;
     private final Properties adapterProperties;
 
@@ -60,12 +58,12 @@ public class OutboundAdapterConfigurationProvider {
         return instance;
     }
 
+    @SuppressWarnings("PATH_TRAVERSAL_IN")
     private Properties loadProperties() throws AdapterConfigurationException {
 
         Properties properties = new Properties();
 
-        Path path = Paths.get(System.getProperty(CARBON_HOME), REPOSITORY_DIR, CONF_DIR, IDENTITY_DIR)
-                .resolve(CONFIG_FILE_NAME);
+        Path path = Paths.get(IdentityUtil.getIdentityConfigDirPath(), CONFIG_FILE_NAME);
 
         if (Files.notExists(path)) {
             throw new AdapterConfigurationException(CONFIG_FILE_NAME + " configuration file doesn't exist.");
