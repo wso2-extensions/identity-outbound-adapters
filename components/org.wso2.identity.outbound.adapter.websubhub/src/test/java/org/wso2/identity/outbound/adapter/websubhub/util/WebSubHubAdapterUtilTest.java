@@ -68,7 +68,7 @@ public class WebSubHubAdapterUtilTest {
     public void testBuildSecurityEventToken(int orgId, String orgName, String eventUri, String topic,
                                             String testProperty) throws WebSubAdapterClientException {
 
-        String ref = "https://localhot:9443/" + orgName + "/test-event";
+        String ref = "https://localhost:9443/" + orgName + "/test-event";
 
         EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
 
@@ -112,11 +112,11 @@ public class WebSubHubAdapterUtilTest {
     public void testBuildSecurityEventTokenError(int orgId, String orgName, String eventUri, String topic,
                                                  String testProperty) throws WebSubAdapterClientException {
 
-        String ref = "https://localhot:9443/" + orgName + "/test-event";
+        String ref = "https://localhost:9443/" + orgName + "/test-event";
 
-        EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
+        EventPayload testEventPayload = getEventPayload(orgId, orgName, testProperty, ref);
 
-        WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
+        WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, eventUri, topic);
 
         if (orgName == null) {
             Assert.fail("Error expected for null orgName.");
@@ -130,7 +130,7 @@ public class WebSubHubAdapterUtilTest {
             Assert.fail("Error expected for null topic.");
         }
 
-        if (testEvenPayload == null) {
+        if (testEventPayload == null) {
             Assert.fail("Error expected for null event payload.");
         }
     }
@@ -177,4 +177,3 @@ public class WebSubHubAdapterUtilTest {
         }
     }
 }
-
