@@ -22,6 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.identity.outbound.adapter.common.exception.AdapterConfigurationException;
+import org.wso2.identity.outbound.adapter.common.exception.AdapterRuntimeException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +35,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.Properties;
 
+import static java.util.Objects.isNull;
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static org.wso2.identity.outbound.adapter.common.util.OutboundAdapterConstants.CONFIG_FILE_NAME;
 
@@ -42,7 +45,16 @@ import static org.wso2.identity.outbound.adapter.common.util.OutboundAdapterCons
  */
 public class OutboundAdapterConfigurationProvider {
 
-    private static OutboundAdapterConfigurationProvider instance;
+    private static final OutboundAdapterConfigurationProvider instance;
+
+    static {
+        try {
+            instance = new OutboundAdapterConfigurationProvider();
+        } catch (AdapterConfigurationException e) {
+            throw new AdapterRuntimeException("Error initializing outbound adapter configuration provider.", e);
+        }
+    }
+
     private final Properties adapterProperties;
 
     private OutboundAdapterConfigurationProvider() throws AdapterConfigurationException {
@@ -50,12 +62,17 @@ public class OutboundAdapterConfigurationProvider {
         adapterProperties = this.loadProperties();
     }
 
+    /**
+     * Returns the singleton instance of the {@link OutboundAdapterConfigurationProvider}.
+     *
+     * @return instance of {@link OutboundAdapterConfigurationProvider}.
+     * @throws AdapterConfigurationException when instance is null.
+     */
     public static OutboundAdapterConfigurationProvider getInstance() throws AdapterConfigurationException {
 
-        if (instance == null) {
-            instance = new OutboundAdapterConfigurationProvider();
-        }
-        return instance;
+        //Adding this as a secondary check, since object should be initialized at the class loading.
+        return ofNullable(instance).orElseThrow(
+                () -> new AdapterConfigurationException("Outbound adapter configuration instance is not initialized."));
     }
 
     @SuppressWarnings("PATH_TRAVERSAL_IN")
@@ -83,9 +100,15 @@ public class OutboundAdapterConfigurationProvider {
         return properties;
     }
 
+    /**
+     * Returns the {@link Optional} value of the property provided.
+     *
+     * @param propertyName name of the config property.
+     * @return Optional value of the property provided.
+     */
     public Optional<String> getProperty(String propertyName) {
 
-        return ofNullable(this.adapterProperties.getProperty(propertyName)).filter(StringUtils::isNotBlank);
+        return isNull(propertyName) ? empty() :
+                ofNullable(this.adapterProperties.getProperty(propertyName)).filter(StringUtils::isNotBlank);
     }
-
 }

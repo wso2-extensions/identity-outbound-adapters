@@ -46,7 +46,9 @@ public class OutboundAdapterConfigurationProviderTest {
         return new Object[][]{
                 // propertyKey, propertyValue, isPresent
                 {"adapter.websub.enabled", "true", true},
-                {"adapter.invalid.key", "true", false}
+                {"adapter.invalid.key", "true", false},
+                {null, null, false},
+                {"adapter.null.value", null, false}
         };
     }
 
