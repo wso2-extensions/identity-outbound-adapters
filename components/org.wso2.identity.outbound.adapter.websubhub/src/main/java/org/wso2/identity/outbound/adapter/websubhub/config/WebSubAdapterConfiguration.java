@@ -29,8 +29,8 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
  */
 public class WebSubAdapterConfiguration {
 
-    private static final String ADAPTER_ENABLED_CONFIG = "adapter.websub.enabled";
-    private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websub.baseUrl";
+    private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
+    private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
 
     private final boolean adapterEnabled;
 
