@@ -18,28 +18,77 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.util;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.mockito.MockedStatic;
 import org.slf4j.MDC;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
+import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
+import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterServerException;
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.wso2.carbon.identity.claim.metadata.mgt.util.ClaimMetadataUtils.CORRELATION_ID_MDC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_SEPARATOR;
 
 /**
  * Unit tests for {@link WebSubHubAdapterUtil}.
  */
 public class WebSubHubAdapterUtilTest {
+
+    private static final String WEBSUB_HUB_BASE_URL = "https://test.com/websub/hub";
+    private static final String TEST_OPERATION = "subscribe";
+    private static final String TEST_EVENT = "urn:ietf:params:testEvent";
+    private static final String TEST_TOPIC = "TEST-TOPIC";
+    private static final String TEST_ORG_NAME = "test-org";
+    private static final String TEST_PROPERTY = "test-property";
+    private static final int TEST_ORG_ID = 999;
+    private static final String INVALID_RESPONSE = "INVALID_RESPONSE";
+
+    private MockedStatic<HttpClientBuilder> mockStaticHttpClientBuilder;
+
+    private enum ResponseStatus {
+
+        STATUS_NOT_200, NULL_ENTITY, NON_SUCCESS_OPERATION
+    }
+
+
+    @BeforeClass
+    public void setup() {
+
+        mockStaticHttpClientBuilder = mockStatic(HttpClientBuilder.class);
+    }
+
+    @AfterClass
+    public void tearDown() {
+
+        mockStaticHttpClientBuilder.close();
+    }
 
     private static EventPayload getEventPayload(int orgId, String orgName, String testProperty, String ref) {
 
@@ -60,7 +109,7 @@ public class WebSubHubAdapterUtilTest {
 
         return new Object[][]{
                 // orgId, orgName, eventUri, topic, testProperty
-                {999, "test-org", "urn:ietf:params:testEvent", "TEST-TOPIC", "test-property"}
+                {TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, TEST_TOPIC, TEST_PROPERTY}
         };
     }
 
@@ -77,8 +126,7 @@ public class WebSubHubAdapterUtilTest {
 
         assertNotNull(securityEventTokenPayload);
         assertEquals(securityEventTokenPayload.getIss(), WebSubHubAdapterConstants.EVENT_ISSUER);
-        assertEquals(securityEventTokenPayload.getAud(),
-                AUDIENCE_BASE_URL + orgName + URL_SEPARATOR + topic);
+        assertEquals(securityEventTokenPayload.getAud(), AUDIENCE_BASE_URL + orgName + URL_SEPARATOR + topic);
 
         Map<String, EventPayload> events = securityEventTokenPayload.getEvent();
         assertNotNull(events);
@@ -101,10 +149,10 @@ public class WebSubHubAdapterUtilTest {
 
         return new Object[][]{
                 // orgId, orgName, eventUri, topic, testProperty
-                {999, null, "urn:ietf:params:testEvent", "TEST-TOPIC", "test-property"},
-                {999, "test-org", null, "TEST-TOPIC", "test-property"},
-                {999, "test-org", "urn:ietf:params:testEvent", null, "test-property"},
-                {999, "test-org", "urn:ietf:params:testEvent", "TEST-TOPIC", null}
+                {TEST_ORG_ID, null, TEST_EVENT, TEST_TOPIC, TEST_PROPERTY},
+                {TEST_ORG_ID, TEST_ORG_NAME, null, TEST_TOPIC, TEST_PROPERTY},
+                {TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, null, TEST_PROPERTY},
+                {TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, TEST_TOPIC, null}
         };
     }
 
@@ -156,6 +204,80 @@ public class WebSubHubAdapterUtilTest {
             }
         } else {
             assertNotNull(WebSubHubAdapterUtil.getCorrelationID(), "Correlation ID should not be null");
+        }
+    }
+
+    @DataProvider(name = "makeTopicMgtAPICallDataProvider")
+    public Object[][] makeTopicMgtAPICallDataProvider() {
+
+        return new Object[][]{
+                // topic, websub hub base URL, operation, responseStatus, expectedException
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, null, null},
+                {null, WEBSUB_HUB_BASE_URL, TEST_OPERATION, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, null, TEST_OPERATION, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, null, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.STATUS_NOT_200,
+                        WebSubAdapterServerException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NULL_ENTITY,
+                        WebSubAdapterServerException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NON_SUCCESS_OPERATION,
+                        WebSubAdapterServerException.class},
+        };
+    }
+
+    @Test(dataProvider = "makeTopicMgtAPICallDataProvider")
+    public void testMakeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation,
+                                        ResponseStatus responseStatus, Class<?> expectedException) throws IOException {
+
+        HttpClientBuilder mockHttpClientBuilder = mock(HttpClientBuilder.class);
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+
+        mockStaticHttpClientBuilder.when(HttpClientBuilder::create).thenReturn(mockHttpClientBuilder);
+        when(mockHttpClientBuilder.useSystemProperties()).thenReturn(mockHttpClientBuilder);
+        when(mockHttpClientBuilder.build()).thenReturn(mockHttpClient);
+        when(mockHttpClient.execute(any())).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+
+        if (responseStatus == ResponseStatus.STATUS_NOT_200) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+        } else {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
+        }
+
+        if (responseStatus == ResponseStatus.NULL_ENTITY) {
+            when(mockResponse.getEntity()).thenReturn(null);
+        } else {
+            when(mockResponse.getEntity()).thenReturn(mockEntity);
+        }
+
+        if (responseStatus == ResponseStatus.NON_SUCCESS_OPERATION) {
+            when(mockEntity.getContent()).thenReturn(
+                    new ByteArrayInputStream(INVALID_RESPONSE.getBytes(StandardCharsets.UTF_8)));
+        } else {
+            when(mockEntity.getContent()).thenReturn(
+                    new ByteArrayInputStream(RESPONSE_FOR_SUCCESSFUL_OPERATION.getBytes(StandardCharsets.UTF_8)));
+        }
+        try {
+            WebSubHubAdapterUtil.makeTopicMgtAPICall(topic, webSubHubBaseUrl, operation);
+
+            if (expectedException == null) {
+
+                verify(mockHttpClientBuilder).useSystemProperties();
+                verify(mockHttpClientBuilder).build();
+                verify(mockResponse).getStatusLine();
+                verify(mockResponse).getEntity();
+                verify(mockEntity).getContent();
+            } else {
+                Assert.fail("Expected an exception of type: " + expectedException.getName());
+            }
+        } catch (WebSubAdapterException e) {
+            if (expectedException == null) {
+                Assert.fail("Received exception: " + e.getClass().getName() + " for a successful test case.");
+            }
+            Assert.assertSame(e.getClass(), expectedException);
         }
     }
 

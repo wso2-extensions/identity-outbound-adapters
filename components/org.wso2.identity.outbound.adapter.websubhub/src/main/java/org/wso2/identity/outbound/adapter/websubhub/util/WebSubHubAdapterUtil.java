@@ -66,6 +66,9 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_URI;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_TOPIC;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_HUB_BASE_URL;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NO_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
@@ -228,14 +231,14 @@ public class WebSubHubAdapterUtil {
     /**
      * Invoke the WebSub Hub to register, unregister the topics.
      *
-     * @param topic            topic name.
-     * @param webSubHubBaseUrl WebSub Hub base URL.
-     * @param operation        whether to register, deregister the queue.
-     * @throws IOException                  on errors communicate with
-     * @throws WebSubAdapterServerException
+     * @param topic                     topic name.
+     * @param webSubHubBaseUrl          WebSub Hub base URL.
+     * @param operation                 whether to register, deregister the topic.
+     * @throws IOException              on errors while communicating with WebSub hub.
+     * @throws WebSubAdapterException   on client or server related errors.
      */
     public static void makeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation)
-            throws IOException, WebSubAdapterServerException {
+            throws IOException, WebSubAdapterException {
 
         String topicMgtUrl = buildURL(topic, webSubHubBaseUrl, operation);
 
@@ -273,7 +276,20 @@ public class WebSubHubAdapterUtil {
      * @param webSubHubBaseUrl Web sub hub base url.
      * @return Url to publish the event.
      */
-    private static String buildURL(String topic, String webSubHubBaseUrl, String operation) {
+    private static String buildURL(String topic, String webSubHubBaseUrl, String operation)
+            throws WebSubAdapterClientException {
+
+        if (topic == null) {
+            throw handleClientException(ERROR_INVALID_TOPIC);
+        }
+
+        if (webSubHubBaseUrl == null) {
+            throw handleClientException(ERROR_INVALID_WEB_SUB_HUB_BASE_URL);
+        }
+
+        if (operation == null) {
+            throw handleClientException(ERROR_INVALID_WEB_SUB_OPERATION);
+        }
 
         return webSubHubBaseUrl + "?" + HUB_MODE + "=" + operation + "&" + HUB_TOPIC + "=" + topic;
     }
