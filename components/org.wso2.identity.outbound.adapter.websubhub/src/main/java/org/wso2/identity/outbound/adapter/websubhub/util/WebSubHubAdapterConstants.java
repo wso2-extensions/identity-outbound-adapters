@@ -35,8 +35,6 @@ public class WebSubHubAdapterConstants {
     public static final String ACCEPTED = "accepted";
     public static final String RESPONSE_FOR_SUCCESSFUL_OPERATION = HUB_MODE + "=" + ACCEPTED;
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
-    public static final String CONNECTION_POOL_MAX_CONNECTIONS = "AdaptiveAuth.MaxTotalConnections";
-    public static final String CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE = "AdaptiveAuth.MaxTotalConnectionsPerRoute";
 
     private static final String WEB_SUB_ADAPTER_ERROR_CODE_PREFIX = "WEBSUB-";
 

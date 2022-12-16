@@ -29,11 +29,17 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
  */
 public class WebSubAdapterConfiguration {
 
-    private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
-    private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
+    static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
+    static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
+    static final String ADPATER_HTTP_CLIENT_MAX_CONNECTIONS = "adapter.websubhub.client.maxTotalConnections";
+    static final String ADPATER_HTTP_CLIENT_MAX_CONNECTIONS_PER_ROUTE =
+            "adapter.websubhub.client.maxTotalConnectionsPerRoute";
+
+    private static final int DEFAULT_MAX_CONNECTIONS = 20;
 
     private final boolean adapterEnabled;
-
+    private final int httpClientMaxConnections;
+    private final int httpClientMaxConnectionsPerRoute;
     private String webSubHubBaseUrl;
 
     /**
@@ -52,6 +58,12 @@ public class WebSubAdapterConfiguration {
             this.webSubHubBaseUrl = configurationProvider.getProperty(ADAPTER_HUB_URL_CONFIG)
                     .orElseThrow(() -> handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED));
         }
+        this.httpClientMaxConnections =
+                configurationProvider.getProperty(ADPATER_HTTP_CLIENT_MAX_CONNECTIONS).map(Integer::parseInt)
+                        .orElse(DEFAULT_MAX_CONNECTIONS);
+        this.httpClientMaxConnectionsPerRoute =
+                configurationProvider.getProperty(ADPATER_HTTP_CLIENT_MAX_CONNECTIONS_PER_ROUTE).map(Integer::parseInt)
+                        .orElse(DEFAULT_MAX_CONNECTIONS);
     }
 
     /**
@@ -72,5 +84,25 @@ public class WebSubAdapterConfiguration {
     public String getWebSubHubBaseUrl() {
 
         return webSubHubBaseUrl;
+    }
+
+    /**
+     * Returns the configuration value for max number of connections to use in the http connection pool manager.
+     *
+     * @return max number of connections to use in http connection pool manager.
+     */
+    public int getHttpClientMaxConnections() {
+
+        return httpClientMaxConnections;
+    }
+
+    /**
+     * Returns the configuration value for max connections per route to use in the http connection pool manager.
+     *
+     * @return max connections per route to use in http connection pool manager.
+     */
+    public int getHttpClientMaxConnectionsPerRoute() {
+
+        return httpClientMaxConnectionsPerRoute;
     }
 }

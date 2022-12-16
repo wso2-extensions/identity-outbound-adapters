@@ -43,12 +43,13 @@ public class WebSubHubAdapterServiceComponent {
     protected void activate(ComponentContext context) {
 
         try {
+            WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
+                    OutboundAdapterConfigurationProvider.getInstance()));
+            WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
+
             WebSubHubAdapterServiceImpl webSubHubEventAdapter = new WebSubHubAdapterServiceImpl();
             context.getBundleContext().registerService(WebSubHubAdapterService.class.getName(),
                     webSubHubEventAdapter, null);
-            WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
-            WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
-                    OutboundAdapterConfigurationProvider.getInstance()));
             if (log.isDebugEnabled()) {
                 log.debug("Successfully activated the WebSub Hub adapter service.");
             }
