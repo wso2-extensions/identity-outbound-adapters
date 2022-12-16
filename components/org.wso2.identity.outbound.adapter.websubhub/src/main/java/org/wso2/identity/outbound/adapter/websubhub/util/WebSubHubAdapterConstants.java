@@ -58,9 +58,13 @@ public class WebSubHubAdapterConstants {
         ERROR_INVALID_EVENT_URI("60004", "Invalid event URI input", "Event URI input cannot be null or empty."),
         ERROR_INVALID_EVENT_TOPIC("60005", "Invalid event topic input", "Event topic input cannot be null or empty."),
         ERROR_INVALID_EVENT_ORGANIZATION_NAME("60006", "Invalid organization name input",
-                "Event organization name input cannot be null or empty"),
-        ERROR_WEB_SUB_BASE_URL_NOT_CONFIGURED("007", "Base url for WebSub Hub is not configured.",
-                "Base URL for WebSub Hub is not configured."),
+                "Event organization name input cannot be null or empty."),
+        ERROR_INVALID_TOPIC("60007", "Invalid WebSub hub topic input", "WebSub hub topic cannot be null " +
+                "or empty."),
+        ERROR_INVALID_WEB_SUB_HUB_BASE_URL("60008", "Invalid WebSub hub base URL input", "WebSub hub base URL cannot " +
+                "be null or empty."),
+        ERROR_INVALID_WEB_SUB_OPERATION("60009", "Invalid WebSub operation input", "WebSub operation cannot be null " +
+                "or empty."),
 
         //server errors.
         ERROR_REGISTERING_HUB_TOPIC("65001", "Error registering WebSub Hub topic.",
@@ -74,9 +78,7 @@ public class WebSubHubAdapterConstants {
         ERROR_NO_RESPONSE_FROM_WEBSUB_HUB("65005", "No Response from WebSub Hub.",
                 "Didn't receive response from WebSub Hub, topic: %s, operation: %s."),
         ERROR_GETTING_ASYNC_CLIENT("65006", "Error getting the async client to publish events.",
-                "Error preparing async client to publish events, tenant: %s."),
-        ERROR_RETRIEVING_WEB_SUB_BASE_URL_CONFIG("65007", "Error retrieving WebSub Hub base URL.",
-                "Server error encountered while retrieving the WebSub Hub base URL from config.");
+                "Error preparing async client to publish events, tenant: %s.");
 
         private final String code;
         private final String message;
