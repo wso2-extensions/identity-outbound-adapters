@@ -18,7 +18,6 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
-import org.wso2.identity.outbound.adapter.websubhub.ClientManager;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 
 import java.security.KeyStore;

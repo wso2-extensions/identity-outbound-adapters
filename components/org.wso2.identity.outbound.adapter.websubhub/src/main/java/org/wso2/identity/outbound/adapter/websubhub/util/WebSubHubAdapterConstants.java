@@ -78,7 +78,11 @@ public class WebSubHubAdapterConstants {
         ERROR_NO_RESPONSE_FROM_WEBSUB_HUB("65005", "No Response from WebSub Hub.",
                 "Didn't receive response from WebSub Hub, topic: %s, operation: %s."),
         ERROR_GETTING_ASYNC_CLIENT("65006", "Error getting the async client to publish events.",
-                "Error preparing async client to publish events, tenant: %s.");
+                "Error preparing async client to publish events, tenant: %s."),
+        ERROR_CREATING_SSL_CONTEXT("65007", "Error while preparing SSL context for WebSubHub http client.",
+                "Server error encountered while preparing SSL context for WebSubHub http client."),
+        ERROR_CREATING_ASYNC_HTTP_CLIENT("65008", "Error while creating the Async HTTP client.",
+                "Server error encountered while creating the Async HTTP Client of WebSub Hub Adapter.");
 
         private final String code;
         private final String message;

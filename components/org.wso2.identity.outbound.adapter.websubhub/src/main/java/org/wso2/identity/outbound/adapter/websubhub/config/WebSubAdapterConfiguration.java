@@ -50,8 +50,7 @@ public class WebSubAdapterConfiguration {
         if (this.adapterEnabled) {
             // If adapter is enabled, base URL is mandatory to be configured.
             this.webSubHubBaseUrl = configurationProvider.getProperty(ADAPTER_HUB_URL_CONFIG)
-                    .orElseThrow(
-                            () -> handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED));
+                    .orElseThrow(() -> handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED));
         }
     }
 

@@ -25,7 +25,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
-import org.wso2.identity.outbound.adapter.websubhub.ClientManager;
 import org.wso2.identity.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 import org.wso2.identity.outbound.adapter.websubhub.service.WebSubHubAdapterServiceImpl;
