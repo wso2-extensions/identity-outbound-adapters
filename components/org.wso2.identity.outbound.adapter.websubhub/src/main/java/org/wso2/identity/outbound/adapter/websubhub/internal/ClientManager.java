@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.identity.outbound.adapter.websubhub;
+package org.wso2.identity.outbound.adapter.websubhub.internal;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -30,21 +30,23 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.ssl.SSLContexts;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
-import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
+import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
+import static java.util.Objects.isNull;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_ASYNC_HTTP_CLIENT;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_SSL_CONTEXT;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_GETTING_ASYNC_CLIENT;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterUtil.handleServerException;
 
 /**
  * Class to retrieve the HTTP Clients.
@@ -52,43 +54,47 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 public class ClientManager {
 
     private static final Log LOG = LogFactory.getLog(ClientManager.class);
-    private static final Map<Integer, CloseableHttpAsyncClient> clientMap = new HashMap<>();
     private static final int HTTP_CONNECTION_TIMEOUT = 300;
     private static final int HTTP_READ_TIMEOUT = 300;
     private static final int HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
     private static final int DEFAULT_MAX_CONNECTIONS = 20;
-    private final PoolingNHttpClientConnectionManager poolingHttpClientConnectionManager;
+    private final CloseableHttpAsyncClient httpAsyncClient;
 
     /**
      * Creates a client manager.
      *
-     * @throws IOException on errors while creating the pooling connection manager.
+     * @throws WebSubAdapterException on errors while creating the http client.
      */
-    public ClientManager() throws IOException {
+    public ClientManager() throws WebSubAdapterException {
 
-        poolingHttpClientConnectionManager = createPoolingConnectionManager();
+        PoolingNHttpClientConnectionManager connectionManager;
+        try {
+            connectionManager = createPoolingConnectionManager();
+        } catch (IOException e) {
+            throw handleServerException(ERROR_CREATING_ASYNC_HTTP_CLIENT, e);
+        }
+
+        RequestConfig config = createRequestConfig();
+        HttpAsyncClientBuilder httpClientBuilder = HttpAsyncClients.custom().setDefaultRequestConfig(config);
+        addSslContext(httpClientBuilder);
+        httpClientBuilder.setConnectionManager(connectionManager);
+        httpAsyncClient = httpClientBuilder.build();
+        httpAsyncClient.start();
     }
 
     /**
      * Get HTTP client properly configured with tenant configurations.
      *
-     * @param tenantDomain Tenant domain of the service provider.
-     * @return HttpClient.
+     * @return CloseableHttpAsyncClient instance.
      */
-    public CloseableHttpAsyncClient getClient(String tenantDomain) throws IOException {
+    public CloseableHttpAsyncClient getClient() throws WebSubAdapterException {
 
-        int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
-        CloseableHttpAsyncClient client = clientMap.get(tenantId);
-        if (client == null) {
-            RequestConfig config = createRequestConfig();
-            HttpAsyncClientBuilder httpClientBuilder = HttpAsyncClients.custom().setDefaultRequestConfig(config);
-            addSslContext(httpClientBuilder, tenantDomain);
-            httpClientBuilder.setConnectionManager(poolingHttpClientConnectionManager);
-            client = httpClientBuilder.build();
-            client.start();
-            clientMap.put(tenantId, client);
+        if (isNull(httpAsyncClient)) {
+            throw handleServerException(ERROR_GETTING_ASYNC_CLIENT, null);
+        } else if (!httpAsyncClient.isRunning()) {
+            httpAsyncClient.start();
         }
-        return client;
+        return httpAsyncClient;
     }
 
     private RequestConfig createRequestConfig() {
@@ -139,22 +145,7 @@ public class ClientManager {
         return poolingHttpClientConnectionMgr;
     }
 
-    /**
-     * Close the client.
-     *
-     * @param tenantId Tenant ID.
-     * @throws IOException
-     */
-    public void closeClient(int tenantId) throws IOException {
-
-        CloseableHttpAsyncClient client = clientMap.get(tenantId);
-        if (client != null) {
-            clientMap.remove(tenantId);
-            client.close();
-        }
-    }
-
-    private void addSslContext(HttpAsyncClientBuilder builder, String tenantDomain) throws IOException {
+    private void addSslContext(HttpAsyncClientBuilder builder) throws WebSubAdapterException {
 
         try {
             SSLContext sslContext = SSLContexts.custom()
@@ -164,10 +155,7 @@ public class ClientManager {
             builder.setSSLHostnameVerifier(new DefaultHostnameVerifier());
 
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-            LOG.error("Error while creating ssl context for WebSubHub endpoint invocation in tenant domain: " +
-                    tenantDomain, e);
-            throw new IOException("Error while creating ssl context for WebSubHub endpoint invocation in tenant " +
-                    "domain: " + tenantDomain, e);
+            throw handleServerException(ERROR_CREATING_SSL_CONTEXT, e);
         }
     }
 }
