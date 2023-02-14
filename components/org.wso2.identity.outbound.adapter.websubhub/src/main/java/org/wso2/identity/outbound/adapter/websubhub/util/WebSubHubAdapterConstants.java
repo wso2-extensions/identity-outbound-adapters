@@ -37,7 +37,10 @@ public class WebSubHubAdapterConstants {
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
     public static final String CONNECTION_POOL_MAX_CONNECTIONS = "AdaptiveAuth.MaxTotalConnections";
     public static final String CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE = "AdaptiveAuth.MaxTotalConnectionsPerRoute";
-
+    public static final Integer DEFAULT_HTTP_CONNECTION_TIMEOUT = 300;
+    public static final Integer DEFAULT_HTTP_READ_TIMEOUT = 300;
+    public static final Integer DEFAULT_HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
+    public static final Integer DEFAULT_HTTP_MAX_CONNECTIONS = 20;
     private static final String WEB_SUB_ADAPTER_ERROR_CODE_PREFIX = "WEBSUB-";
 
     private WebSubHubAdapterConstants() {

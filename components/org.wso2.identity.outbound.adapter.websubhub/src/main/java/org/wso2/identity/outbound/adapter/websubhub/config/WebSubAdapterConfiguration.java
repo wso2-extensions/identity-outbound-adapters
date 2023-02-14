@@ -20,6 +20,7 @@ package org.wso2.identity.outbound.adapter.websubhub.config;
 
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
+import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants;
 
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterUtil.handleClientException;
@@ -31,8 +32,16 @@ public class WebSubAdapterConfiguration {
 
     private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
     private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
+    private static final String HTTP_CONNECTION_TIMEOUT = "adapter.websubhub.httpConnectionTimeout";
+    private static final String  HTTP_READ_TIMEOUT = "adapter.websubhub.httpReadTimeout";
+    private static final String HTTP_CONNECTION_REQUEST_TIMEOUT = "adapter.websubhub.httpConnectionRequestTimeout";
+    private static final String DEFAULT_MAX_CONNECTIONS = "adapter.websubhub.defaultMaxConnections";
 
     private final boolean adapterEnabled;
+    private final int httpConnectionTimeout;
+    private final int httpReadTimeout;
+    private final int httpConnectionRequestTimeout;
+    private final int defaultMaxConnections;
 
     private String webSubHubBaseUrl;
 
@@ -52,6 +61,19 @@ public class WebSubAdapterConfiguration {
             this.webSubHubBaseUrl = configurationProvider.getProperty(ADAPTER_HUB_URL_CONFIG)
                     .orElseThrow(() -> handleClientException(WEB_SUB_BASE_URL_NOT_CONFIGURED));
         }
+
+        this.httpConnectionTimeout =
+                configurationProvider.getProperty(HTTP_CONNECTION_TIMEOUT).map(Integer::parseInt).orElse(
+                        WebSubHubAdapterConstants.DEFAULT_HTTP_CONNECTION_TIMEOUT);
+        this.httpReadTimeout =
+                configurationProvider.getProperty(HTTP_READ_TIMEOUT).map(Integer::parseInt)
+                        .orElse(WebSubHubAdapterConstants.DEFAULT_HTTP_READ_TIMEOUT);
+        this.httpConnectionRequestTimeout =
+                configurationProvider.getProperty(HTTP_CONNECTION_REQUEST_TIMEOUT).map(Integer::parseInt)
+                        .orElse(WebSubHubAdapterConstants.DEFAULT_HTTP_CONNECTION_REQUEST_TIMEOUT);
+        this.defaultMaxConnections =
+                configurationProvider.getProperty(DEFAULT_MAX_CONNECTIONS).map(Integer::parseInt)
+                        .orElse(WebSubHubAdapterConstants.DEFAULT_HTTP_MAX_CONNECTIONS);
     }
 
     /**
@@ -72,5 +94,45 @@ public class WebSubAdapterConfiguration {
     public String getWebSubHubBaseUrl() {
 
         return webSubHubBaseUrl;
+    }
+
+    /**
+     * Returns the HTTP connection timeout.
+     *
+     * @return HTTP connection timeout.
+     */
+    public Integer getHTTPConnectionTimeout() {
+
+        return httpConnectionTimeout;
+    }
+
+    /**
+     * Returns the HTTP read timeout.
+     *
+     * @return HTTP Read Timeout.
+     */
+    public Integer getHttpReadTimeout() {
+
+        return httpReadTimeout;
+    }
+
+    /**
+     * Returns the http connection request timeout.
+     *
+     * @return http connection request timeout.
+     */
+    public Integer getHttpConnectionRequestTimeout() {
+
+        return httpConnectionRequestTimeout;
+    }
+
+    /**
+     * Returns the default max connections.
+     *
+     * @return default max connections.
+     */
+    public Integer getDefaultMaxConnections() {
+
+        return defaultMaxConnections;
     }
 }

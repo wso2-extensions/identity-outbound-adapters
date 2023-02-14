@@ -54,10 +54,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 public class ClientManager {
 
     private static final Log LOG = LogFactory.getLog(ClientManager.class);
-    private static final int HTTP_CONNECTION_TIMEOUT = 300;
-    private static final int HTTP_READ_TIMEOUT = 300;
-    private static final int HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
-    private static final int DEFAULT_MAX_CONNECTIONS = 20;
     private final CloseableHttpAsyncClient httpAsyncClient;
 
     /**
@@ -100,9 +96,12 @@ public class ClientManager {
     private RequestConfig createRequestConfig() {
 
         return RequestConfig.custom()
-                .setConnectTimeout(HTTP_CONNECTION_TIMEOUT)
-                .setConnectionRequestTimeout(HTTP_CONNECTION_REQUEST_TIMEOUT)
-                .setSocketTimeout(HTTP_READ_TIMEOUT)
+                .setConnectTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHTTPConnectionTimeout())
+                .setConnectionRequestTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHttpConnectionRequestTimeout())
+                .setSocketTimeout(
+                        WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().getHttpReadTimeout())
                 .setRedirectsEnabled(false)
                 .setRelativeRedirectsAllowed(false)
                 .build();
@@ -112,8 +111,10 @@ public class ClientManager {
 
         String maxConnectionsString = IdentityUtil.getProperty(CONNECTION_POOL_MAX_CONNECTIONS);
         String maxConnectionsPerRouteString = IdentityUtil.getProperty(CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE);
-        int maxConnections = DEFAULT_MAX_CONNECTIONS;
-        int maxConnectionsPerRoute = DEFAULT_MAX_CONNECTIONS;
+        int maxConnections = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                .getDefaultMaxConnections();
+        int maxConnectionsPerRoute = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                .getDefaultMaxConnections();
 
         if (StringUtils.isNotEmpty(maxConnectionsString)) {
             try {
