@@ -46,9 +46,9 @@ public class WebSubHubAdapterServiceComponent {
             WebSubHubAdapterServiceImpl webSubHubEventAdapter = new WebSubHubAdapterServiceImpl();
             context.getBundleContext().registerService(WebSubHubAdapterService.class.getName(),
                     webSubHubEventAdapter, null);
-            WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
             WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
                     OutboundAdapterConfigurationProvider.getInstance()));
+            WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
             if (log.isDebugEnabled()) {
                 log.debug("Successfully activated the WebSub Hub adapter service.");
             }

@@ -33,7 +33,7 @@ public class WebSubAdapterConfiguration {
     private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
     private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
     private static final String HTTP_CONNECTION_TIMEOUT = "adapter.websubhub.httpConnectionTimeout";
-    private static final String  HTTP_READ_TIMEOUT = "adapter.websubhub.httpReadTimeout";
+    private static final String HTTP_READ_TIMEOUT = "adapter.websubhub.httpReadTimeout";
     private static final String HTTP_CONNECTION_REQUEST_TIMEOUT = "adapter.websubhub.httpConnectionRequestTimeout";
     private static final String DEFAULT_MAX_CONNECTIONS = "adapter.websubhub.defaultMaxConnections";
 
