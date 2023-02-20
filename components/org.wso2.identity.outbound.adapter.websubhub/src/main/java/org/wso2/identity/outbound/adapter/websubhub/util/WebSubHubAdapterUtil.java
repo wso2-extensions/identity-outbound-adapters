@@ -250,8 +250,13 @@ public class WebSubHubAdapterUtil {
                                 log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic);
                             }
                         } else {
-                            throw handleServerException(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB, null, topic, operation,
-                                    responseString);
+                            // Since the endpoint respond with http status code 200, adapter accepts the response as a
+                            // success and log it as a warning. In current implementation this only happens
+                            // 1. if the topic exists when registering the topic.
+                            // 2. if the topic doesn't exist when de-registering the topic
+                            // TODO: This will have to be updated when the websub hub error responses are updated.
+                            log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
+                                    topic, operation, responseString));
                         }
                     } else {
                         throw handleServerException(ERROR_NO_RESPONSE_FROM_WEBSUB_HUB, null, topic, operation);

@@ -47,4 +47,13 @@ public class WebSubAdapterException extends Exception {
         this.errorCode = errorCode;
     }
 
+    public String getErrorCode() {
+
+        return errorCode;
+    }
+
+    public String getDescription() {
+
+        return description;
+    }
 }

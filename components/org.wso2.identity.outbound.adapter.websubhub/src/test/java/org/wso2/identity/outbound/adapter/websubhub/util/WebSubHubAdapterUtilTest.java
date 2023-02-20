@@ -220,8 +220,7 @@ public class WebSubHubAdapterUtilTest {
                         WebSubAdapterServerException.class},
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NULL_ENTITY,
                         WebSubAdapterServerException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NON_SUCCESS_OPERATION,
-                        WebSubAdapterServerException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NON_SUCCESS_OPERATION, null},
         };
     }
 
