@@ -25,7 +25,7 @@
 
     <groupId>org.wso2.identity.outbound.adapters</groupId>
     <modelVersion>4.0.0</modelVersion>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.8-SNAPSHOT</version>
     <artifactId>identity-outbound-adapters</artifactId>
 
     <packaging>pom</packaging>
