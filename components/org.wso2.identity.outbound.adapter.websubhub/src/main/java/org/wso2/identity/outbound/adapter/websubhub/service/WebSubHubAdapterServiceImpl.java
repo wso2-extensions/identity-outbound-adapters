@@ -33,6 +33,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_DEREGISTERING_HUB_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_REGISTERING_HUB_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.WEB_SUB_HUB_ADAPTER_DISABLED;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.REGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.TOPIC_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterUtil.buildSecurityEventToken;
@@ -61,6 +62,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
                     getWebSubBaseURL());
         } else {
             log.warn("Event cannot be published, WebSub Hub Adapter is not enabled.");
+            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED);
         }
     }
 
@@ -75,6 +77,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
             }
         } else {
             log.warn("WebSub Hub Topic cannot be registered, WebSub Hub Adapter is not enabled.");
+            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED);
         }
     }
 
@@ -89,6 +92,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
             }
         } else {
             log.warn("WebSub Hub Topic cannot be de-registered, WebSub Hub Adapter is not enabled.");
+            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED);
         }
     }
 
