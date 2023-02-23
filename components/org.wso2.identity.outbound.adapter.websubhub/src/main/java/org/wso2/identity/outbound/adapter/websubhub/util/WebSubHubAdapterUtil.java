@@ -174,7 +174,7 @@ public class WebSubHubAdapterUtil {
         }
 
         WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(request);
-        long requestStartTime = System.currentTimeMillis();
+        final long requestStartTime = System.currentTimeMillis();
         client.execute(request, new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse response) {
