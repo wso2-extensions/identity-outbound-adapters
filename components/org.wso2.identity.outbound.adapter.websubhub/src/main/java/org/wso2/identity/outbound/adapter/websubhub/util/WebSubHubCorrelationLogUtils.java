@@ -106,16 +106,7 @@ public class WebSubHubCorrelationLogUtils {
      */
     private static String createFormattedLog(List<String> logPropertiesList) {
 
-        StringBuilder sb = new StringBuilder();
-        int count = 0;
-        for (String property: logPropertiesList) {
-            sb.append(property);
-            if (count < logPropertiesList.size() - 1) {
-                sb.append(CORRELATION_LOG_SEPARATOR);
-            }
-            count++;
-        }
-        return sb.toString();
+        return String.join(CORRELATION_LOG_SEPARATOR, logPropertiesList);
     }
 
     /**
