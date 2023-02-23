@@ -18,7 +18,6 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
@@ -30,7 +29,6 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.ssl.SSLContexts;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 
 import java.io.IOException;
@@ -41,8 +39,6 @@ import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.SSLContext;
 
 import static java.util.Objects.isNull;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_ASYNC_HTTP_CLIENT;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_SSL_CONTEXT;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_GETTING_ASYNC_CLIENT;
