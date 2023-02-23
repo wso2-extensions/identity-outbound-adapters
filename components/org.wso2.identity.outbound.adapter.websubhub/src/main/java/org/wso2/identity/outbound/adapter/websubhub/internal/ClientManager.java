@@ -114,26 +114,6 @@ public class ClientManager {
         int maxConnectionsPerRoute = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
                 .getDefaultMaxConnections();
 
-        if (StringUtils.isNotEmpty(maxConnectionsString)) {
-            try {
-                maxConnections = Integer.parseInt(maxConnectionsString);
-            } catch (NumberFormatException e) {
-                // Default value is used.
-                LOG.error("Error while converting MaxConnection " + maxConnections + " to integer. So proceed with " +
-                        "default value ", e);
-            }
-        }
-
-        if (StringUtils.isNotEmpty(maxConnectionsPerRouteString)) {
-            try {
-                maxConnectionsPerRoute = Integer.parseInt(maxConnectionsPerRouteString);
-            } catch (NumberFormatException e) {
-                // Default value is used.
-                LOG.error("Error while converting MaxConnectionsPerRoute " + maxConnectionsPerRoute + " to integer. " +
-                        "So proceed with default value ", e);
-            }
-        }
-
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
         PoolingNHttpClientConnectionManager poolingHttpClientConnectionMgr = new
                 PoolingNHttpClientConnectionManager(ioReactor);

@@ -216,6 +216,7 @@ public class WebSubHubAdapterUtil {
 
             @Override
             public void failed(final Exception ex) {
+
                 WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
                         RequestStatus.FAILED.getStatus(), ex.getMessage());
                 log.error("Publishing event data to WebSubHub failed. ", ex);
@@ -223,6 +224,7 @@ public class WebSubHubAdapterUtil {
 
             @Override
             public void cancelled() {
+
                 WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
                         RequestStatus.CANCELLED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");

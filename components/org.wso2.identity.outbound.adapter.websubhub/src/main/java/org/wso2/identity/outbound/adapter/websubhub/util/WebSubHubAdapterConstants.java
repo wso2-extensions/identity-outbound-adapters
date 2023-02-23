@@ -69,7 +69,8 @@ public class WebSubHubAdapterConstants {
         ERROR_INVALID_WEB_SUB_OPERATION("60009", "Invalid WebSub operation input", "WebSub operation cannot be null " +
                 "or empty."),
         WEB_SUB_HUB_ADAPTER_DISABLED("60010", "WebSub Hub adapter is disabled.",
-                "WebSub Hub adapter is disabled."),
+                "Error in %s. WebSub Hub adapter is disabled."),
+
         //server errors.
         ERROR_REGISTERING_HUB_TOPIC("65001", "Error registering WebSub Hub topic.",
                 "Server error encountered while registering the WebSub Hub topic: %s, tenant: %s."),

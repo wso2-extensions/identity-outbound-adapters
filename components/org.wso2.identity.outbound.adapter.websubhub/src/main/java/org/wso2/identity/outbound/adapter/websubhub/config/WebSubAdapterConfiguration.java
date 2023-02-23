@@ -101,7 +101,7 @@ public class WebSubAdapterConfiguration {
      *
      * @return HTTP connection timeout.
      */
-    public Integer getHTTPConnectionTimeout() {
+    public int getHTTPConnectionTimeout() {
 
         return httpConnectionTimeout;
     }
@@ -111,7 +111,7 @@ public class WebSubAdapterConfiguration {
      *
      * @return HTTP Read Timeout.
      */
-    public Integer getHttpReadTimeout() {
+    public int getHttpReadTimeout() {
 
         return httpReadTimeout;
     }
@@ -121,7 +121,7 @@ public class WebSubAdapterConfiguration {
      *
      * @return http connection request timeout.
      */
-    public Integer getHttpConnectionRequestTimeout() {
+    public int getHttpConnectionRequestTimeout() {
 
         return httpConnectionRequestTimeout;
     }
@@ -131,7 +131,7 @@ public class WebSubAdapterConfiguration {
      *
      * @return default max connections.
      */
-    public Integer getDefaultMaxConnections() {
+    public int getDefaultMaxConnections() {
 
         return defaultMaxConnections;
     }

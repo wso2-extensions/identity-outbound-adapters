@@ -62,7 +62,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
                     getWebSubBaseURL());
         } else {
             log.warn("Event cannot be published, WebSub Hub Adapter is not enabled.");
-            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED);
+            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED, "event publishing");
         }
     }
 
@@ -77,7 +77,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
             }
         } else {
             log.warn("WebSub Hub Topic cannot be registered, WebSub Hub Adapter is not enabled.");
-            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED);
+            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED, "topic registration");
         }
     }
 
@@ -92,7 +92,7 @@ public class WebSubHubAdapterServiceImpl implements WebSubHubAdapterService {
             }
         } else {
             log.warn("WebSub Hub Topic cannot be de-registered, WebSub Hub Adapter is not enabled.");
-            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED);
+            throw handleClientException(WEB_SUB_HUB_ADAPTER_DISABLED, "topic registration");
         }
     }
 
