@@ -108,7 +108,7 @@ public class ClientManager {
         int maxConnections = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
                 .getDefaultMaxConnections();
         int maxConnectionsPerRoute = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
-                .getDefaultMaxConnections();
+                .getDefaultMaxConnectionsPerRoute();
 
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
         PoolingNHttpClientConnectionManager poolingHttpClientConnectionMgr = new

@@ -139,4 +139,14 @@ public class WebSubAdapterConfiguration {
 
         return defaultMaxConnections;
     }
+
+    /**
+     * Returns the default max connections per route.
+     *
+     * @return default max connections per route.
+     */
+    public int getDefaultMaxConnectionsPerRoute() {
+
+        return defaultMaxConnectionsPerRoute;
+    }
 }
