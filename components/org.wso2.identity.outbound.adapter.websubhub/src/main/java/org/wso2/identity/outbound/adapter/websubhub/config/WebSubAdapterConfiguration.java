@@ -36,12 +36,13 @@ public class WebSubAdapterConfiguration {
     private static final String HTTP_READ_TIMEOUT = "adapter.websubhub.httpReadTimeout";
     private static final String HTTP_CONNECTION_REQUEST_TIMEOUT = "adapter.websubhub.httpConnectionRequestTimeout";
     private static final String DEFAULT_MAX_CONNECTIONS = "adapter.websubhub.defaultMaxConnections";
-
+    private static final String DEFAULT_MAX_CONNECTIONS_PER_ROUTE = "adapter.websubhub.defaultMaxConnectionsPerRoute";
     private final boolean adapterEnabled;
     private final int httpConnectionTimeout;
     private final int httpReadTimeout;
     private final int httpConnectionRequestTimeout;
     private final int defaultMaxConnections;
+    private final int defaultMaxConnectionsPerRoute;
 
     private String webSubHubBaseUrl;
 
@@ -74,6 +75,9 @@ public class WebSubAdapterConfiguration {
         this.defaultMaxConnections =
                 configurationProvider.getProperty(DEFAULT_MAX_CONNECTIONS).map(Integer::parseInt)
                         .orElse(WebSubHubAdapterConstants.DEFAULT_HTTP_MAX_CONNECTIONS);
+        this.defaultMaxConnectionsPerRoute =
+                configurationProvider.getProperty(DEFAULT_MAX_CONNECTIONS_PER_ROUTE).map(Integer::parseInt)
+                        .orElse(WebSubHubAdapterConstants.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE);
     }
 
     /**
