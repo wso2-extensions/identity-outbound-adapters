@@ -35,9 +35,11 @@ public class WebSubHubAdapterConstants {
     public static final String ACCEPTED = "accepted";
     public static final String RESPONSE_FOR_SUCCESSFUL_OPERATION = HUB_MODE + "=" + ACCEPTED;
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
-    public static final String CONNECTION_POOL_MAX_CONNECTIONS = "AdaptiveAuth.MaxTotalConnections";
-    public static final String CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE = "AdaptiveAuth.MaxTotalConnectionsPerRoute";
-
+    public static final Integer DEFAULT_HTTP_CONNECTION_TIMEOUT = 300;
+    public static final Integer DEFAULT_HTTP_READ_TIMEOUT = 300;
+    public static final Integer DEFAULT_HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
+    public static final Integer DEFAULT_HTTP_MAX_CONNECTIONS = 20;
+    public static final Integer DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 20;
     private static final String WEB_SUB_ADAPTER_ERROR_CODE_PREFIX = "WEBSUB-";
 
     private WebSubHubAdapterConstants() {
@@ -65,6 +67,8 @@ public class WebSubHubAdapterConstants {
                 "be null or empty."),
         ERROR_INVALID_WEB_SUB_OPERATION("60009", "Invalid WebSub operation input", "WebSub operation cannot be null " +
                 "or empty."),
+        WEB_SUB_HUB_ADAPTER_DISABLED("60010", "WebSub Hub adapter is disabled.",
+                "WebSub Hub adapter is disabled."),
 
         //server errors.
         ERROR_REGISTERING_HUB_TOPIC("65001", "Error registering WebSub Hub topic.",
@@ -110,5 +114,4 @@ public class WebSubHubAdapterConstants {
             return description;
         }
     }
-
 }

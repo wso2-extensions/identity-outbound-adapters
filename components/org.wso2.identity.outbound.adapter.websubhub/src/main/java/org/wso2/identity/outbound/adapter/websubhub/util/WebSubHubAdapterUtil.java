@@ -46,6 +46,7 @@ import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterServe
 import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
+import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -172,14 +173,20 @@ public class WebSubHubAdapterUtil {
             log.debug("Publishing event data to WebSubHub. URL: " + url + " tenant domain: " + tenantDomain);
         }
 
+        WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(request);
+        final long requestStartTime = System.currentTimeMillis();
         client.execute(request, new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse response) {
 
                 int responseCode = response.getStatusLine().getStatusCode();
+                String responsePhrase = response.getStatusLine().getReasonPhrase();
                 if (log.isDebugEnabled()) {
                     log.debug("WebSubHub request completed. Response code: " + responseCode);
                 }
+                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+                        RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
+
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
                     if (log.isDebugEnabled()) {
@@ -210,12 +217,16 @@ public class WebSubHubAdapterUtil {
             @Override
             public void failed(final Exception ex) {
 
+                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+                        RequestStatus.FAILED.getStatus(), ex.getMessage());
                 log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
             @Override
             public void cancelled() {
 
+                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+                        RequestStatus.CANCELLED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });

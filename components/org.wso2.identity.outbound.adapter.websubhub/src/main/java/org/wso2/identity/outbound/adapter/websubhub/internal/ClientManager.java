@@ -18,7 +18,6 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
@@ -30,7 +29,6 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.ssl.SSLContexts;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 
 import java.io.IOException;
@@ -41,8 +39,6 @@ import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.SSLContext;
 
 import static java.util.Objects.isNull;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_ASYNC_HTTP_CLIENT;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_SSL_CONTEXT;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_GETTING_ASYNC_CLIENT;
@@ -54,10 +50,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 public class ClientManager {
 
     private static final Log LOG = LogFactory.getLog(ClientManager.class);
-    private static final int HTTP_CONNECTION_TIMEOUT = 300;
-    private static final int HTTP_READ_TIMEOUT = 300;
-    private static final int HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
-    private static final int DEFAULT_MAX_CONNECTIONS = 20;
     private final CloseableHttpAsyncClient httpAsyncClient;
 
     /**
@@ -100,9 +92,12 @@ public class ClientManager {
     private RequestConfig createRequestConfig() {
 
         return RequestConfig.custom()
-                .setConnectTimeout(HTTP_CONNECTION_TIMEOUT)
-                .setConnectionRequestTimeout(HTTP_CONNECTION_REQUEST_TIMEOUT)
-                .setSocketTimeout(HTTP_READ_TIMEOUT)
+                .setConnectTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHTTPConnectionTimeout())
+                .setConnectionRequestTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHttpConnectionRequestTimeout())
+                .setSocketTimeout(
+                        WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().getHttpReadTimeout())
                 .setRedirectsEnabled(false)
                 .setRelativeRedirectsAllowed(false)
                 .build();
@@ -110,30 +105,10 @@ public class ClientManager {
 
     private PoolingNHttpClientConnectionManager createPoolingConnectionManager() throws IOException {
 
-        String maxConnectionsString = IdentityUtil.getProperty(CONNECTION_POOL_MAX_CONNECTIONS);
-        String maxConnectionsPerRouteString = IdentityUtil.getProperty(CONNECTION_POOL_MAX_CONNECTIONS_PER_ROUTE);
-        int maxConnections = DEFAULT_MAX_CONNECTIONS;
-        int maxConnectionsPerRoute = DEFAULT_MAX_CONNECTIONS;
-
-        if (StringUtils.isNotEmpty(maxConnectionsString)) {
-            try {
-                maxConnections = Integer.parseInt(maxConnectionsString);
-            } catch (NumberFormatException e) {
-                // Default value is used.
-                LOG.error("Error while converting MaxConnection " + maxConnections + " to integer. So proceed with " +
-                        "default value ", e);
-            }
-        }
-
-        if (StringUtils.isNotEmpty(maxConnectionsPerRouteString)) {
-            try {
-                maxConnectionsPerRoute = Integer.parseInt(maxConnectionsPerRouteString);
-            } catch (NumberFormatException e) {
-                // Default value is used.
-                LOG.error("Error while converting MaxConnectionsPerRoute " + maxConnectionsPerRoute + " to integer. " +
-                        "So proceed with default value ", e);
-            }
-        }
+        int maxConnections = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                .getDefaultMaxConnections();
+        int maxConnectionsPerRoute = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                .getDefaultMaxConnectionsPerRoute();
 
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
         PoolingNHttpClientConnectionManager poolingHttpClientConnectionMgr = new
