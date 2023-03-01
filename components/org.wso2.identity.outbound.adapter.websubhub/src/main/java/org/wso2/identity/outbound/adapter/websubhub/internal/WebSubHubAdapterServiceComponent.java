@@ -18,6 +18,8 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
+import com.nimbusds.jose.util.DefaultResourceRetriever;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;
@@ -49,6 +51,7 @@ public class WebSubHubAdapterServiceComponent {
             WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
                     OutboundAdapterConfigurationProvider.getInstance()));
             WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
+            WebSubHubAdapterDataHolder.getInstance().setResourceRetriever(new DefaultResourceRetriever());
             if (log.isDebugEnabled()) {
                 log.debug("Successfully activated the WebSub Hub adapter service.");
             }

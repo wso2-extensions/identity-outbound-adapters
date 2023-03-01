@@ -47,6 +47,7 @@ import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDat
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
+import org.wso2.carbon.identity.event.IdentityEventException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -77,6 +78,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PUBLISH;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_SEPARATOR;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PAYLOAD_EVENT_JSON_KEY;
 
 /**
  * This class contains the utility method implementations required by WebSub Hub outbound adapter.
@@ -162,8 +164,15 @@ public class WebSubHubAdapterUtil {
         String jsonString;
         try {
             jsonString = mapper.writeValueAsString(securityEventTokenPayload);
-            request.setEntity(new StringEntity(jsonString));
-        } catch (IOException e) {
+            JSONParser jsonParser = new JSONParser();
+            JSONObject payloadJSON = (JSONObject) jsonParser.parse(jsonString);
+            // Encrypt the event object in the payload.
+            if (WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().isEncryptionEnabled()) {
+                payloadJSON.put(PAYLOAD_EVENT_JSON_KEY, EventPayloadCryptographyUtils.encryptEventPayload(
+                        payloadJSON.get(PAYLOAD_EVENT_JSON_KEY).toString(), tenantDomain));
+            }
+            request.setEntity(new StringEntity(payloadJSON.toString()));
+        } catch (IOException | IdentityEventException | ParseException e) {
             throw handleClientException(ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD);
         }
 
