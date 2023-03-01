@@ -118,7 +118,16 @@
                 <artifactId>annotations</artifactId>
                 <version>${findbugs.annotations.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.wso2.orbit.com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbusds.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${json-smart.version}</version>
+            </dependency>
             <!--Test dependencies-->
             <dependency>
                 <groupId>org.testng</groupId>
@@ -287,6 +296,10 @@
         <compiler-source.version>1.8</compiler-source.version>
         <compiler-target.version>1.8</compiler-target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <nimbusds.version>7.9.0.wso2v1</nimbusds.version>
+        <nimbusds.osgi.version.range>[7.0.0,8.0.0)</nimbusds.osgi.version.range>
+        <json-smart.version>2.4.7</json-smart.version>
 
         <testng.version>6.9.10</testng.version>
         <mockito.version>4.9.0</mockito.version>
