@@ -19,7 +19,6 @@
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
 import com.nimbusds.jose.util.DefaultResourceRetriever;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;

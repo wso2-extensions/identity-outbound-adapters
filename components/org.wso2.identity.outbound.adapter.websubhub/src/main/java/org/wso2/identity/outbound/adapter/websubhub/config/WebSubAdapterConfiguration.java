@@ -22,8 +22,8 @@ import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationPro
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants;
 
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ENCRYPTION_KEY_ENDPOINT_URL_NOT_CONFIGURED;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.WEB_SUB_BASE_URL_NOT_CONFIGURED;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterUtil.handleClientException;
 
 /**
@@ -95,8 +95,9 @@ public class WebSubAdapterConfiguration {
         this.defaultMaxConnectionsPerRoute =
                 configurationProvider.getProperty(DEFAULT_MAX_CONNECTIONS_PER_ROUTE).map(Integer::parseInt)
                         .orElse(WebSubHubAdapterConstants.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE);
-        this.encryptionKeyCacheLifespan = configurationProvider.getProperty(ENCRYPTION_KEY_CACHE_LIFESPAN).map(Integer::parseInt)
-                .orElse(WebSubHubAdapterConstants.DEFAULT_ENCRYPTION_KEY_CACHE_LIFESPAN);
+        this.encryptionKeyCacheLifespan =
+                configurationProvider.getProperty(ENCRYPTION_KEY_CACHE_LIFESPAN).map(Integer::parseInt)
+                        .orElse(WebSubHubAdapterConstants.DEFAULT_ENCRYPTION_KEY_CACHE_LIFESPAN);
     }
 
     /**

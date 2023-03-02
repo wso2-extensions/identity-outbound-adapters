@@ -19,7 +19,6 @@
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
 import com.nimbusds.jose.util.DefaultResourceRetriever;
-
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 
 import java.security.KeyStore;

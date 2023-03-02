@@ -20,7 +20,6 @@ import com.nimbusds.jose.jwk.source.DefaultJWKSetCache;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.DefaultResourceRetriever;
 import com.nimbusds.jose.util.Resource;
-import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +27,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.wso2.carbon.identity.event.IdentityEventException;
+import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
 import sun.security.rsa.RSAPublicKeyImpl;
 
 import java.io.IOException;
