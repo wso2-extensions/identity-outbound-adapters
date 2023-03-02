@@ -59,8 +59,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM_WITH_MODE;
 
-
-
 /**
  * This class contains utility methods for encrypting Event Payloads.
  */

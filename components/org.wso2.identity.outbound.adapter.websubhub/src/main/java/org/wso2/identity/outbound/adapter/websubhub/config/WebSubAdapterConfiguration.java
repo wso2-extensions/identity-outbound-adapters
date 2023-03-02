@@ -39,9 +39,9 @@ public class WebSubAdapterConfiguration {
     private static final String HTTP_CONNECTION_REQUEST_TIMEOUT = "adapter.websubhub.httpConnectionRequestTimeout";
     private static final String DEFAULT_MAX_CONNECTIONS = "adapter.websubhub.defaultMaxConnections";
     private static final String DEFAULT_MAX_CONNECTIONS_PER_ROUTE = "adapter.websubhub.defaultMaxConnectionsPerRoute";
-    public static final String ENCRYPTION_KEY_ENDPOINT_URL = "adapter.websubhub.encryptionKeyEndpointUrl";
+    private static final String ENCRYPTION_KEY_ENDPOINT_URL = "adapter.websubhub.encryptionKeyEndpointUrl";
     // Value for the encryption key cache lifespan in minutes.
-    public static final String ENCRYPTION_KEY_CACHE_LIFESPAN = "adapter.websubhub.encryptionKeyCacheLifespan";
+    private static final String ENCRYPTION_KEY_CACHE_LIFESPAN = "adapter.websubhub.encryptionKeyCacheLifespan";
     private final boolean adapterEnabled;
     private final boolean encryptionEnabled;
     private final int httpConnectionTimeout;
