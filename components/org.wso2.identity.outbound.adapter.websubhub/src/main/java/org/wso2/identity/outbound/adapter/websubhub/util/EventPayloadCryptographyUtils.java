@@ -158,12 +158,8 @@ public class EventPayloadCryptographyUtils {
 
     private static DefaultJWKSetCache getJWKCache(String tenantDomain) {
 
-        if (cacheMap.get(tenantDomain) == null) {
-            int cacheLifeSpan = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
-                    .getEncryptionKeyCacheLifespan();
-            cacheMap.putIfAbsent(tenantDomain, new DefaultJWKSetCache(cacheLifeSpan, TimeUnit.MINUTES));
-        }
-        return cacheMap.get(tenantDomain);
+        return cacheMap.computeIfAbsent(tenantDomain, new DefaultJWKSetCache(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                    .getEncryptionKeyCacheLifespan(), TimeUnit.MINUTES));
     }
 
     private static PublicKey convertJWKToPublicKey(JWKSet jwkSet) throws JOSEException, IdentityEventException {
