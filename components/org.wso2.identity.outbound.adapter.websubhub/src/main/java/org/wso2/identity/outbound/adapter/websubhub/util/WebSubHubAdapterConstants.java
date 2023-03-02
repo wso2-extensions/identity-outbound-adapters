@@ -40,7 +40,18 @@ public class WebSubHubAdapterConstants {
     public static final Integer DEFAULT_HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
     public static final Integer DEFAULT_HTTP_MAX_CONNECTIONS = 20;
     public static final Integer DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 20;
+    // The default lifespan is 30 minutes.
+    public static final Integer DEFAULT_ENCRYPTION_KEY_CACHE_LIFESPAN = 30;
     private static final String WEB_SUB_ADAPTER_ERROR_CODE_PREFIX = "WEBSUB-";
+    public static final String SYMMETRIC_ENCRYPTION_ALGORITHM = "AES";
+    public static final String SYMMETRIC_ENCRYPTION_ALGORITHM_WITH_MODE = "AES/GCM/NoPadding";
+    public static final String ASYMMETRIC_ENCRYPTION_ALGORITHM = "RSA";
+    public static final String PAYLOAD_EVENT_JSON_KEY = "event";
+    public static final String CRYPTO_KEY_JSON_KEY = "payloadCryptoKey";
+    public static final String ENCRYPTED_PAYLOAD_JSON_KEY = "payload";
+    public static final String IV_PARAMETER_SPEC_JSON_KEY = "ivParameterSpec";
+    public static final String CRYPTO_KEY_RESPONSE_JSON_KEY = "key";
+    public static final String ENCRYPTION_KEY_ENDPOINT_URL_TENANT_PLACEHOLDER = "${tenant_domain}";
 
     private WebSubHubAdapterConstants() {
 
@@ -69,6 +80,8 @@ public class WebSubHubAdapterConstants {
                 "or empty."),
         WEB_SUB_HUB_ADAPTER_DISABLED("60010", "WebSub Hub adapter is disabled.",
                 "WebSub Hub adapter is disabled."),
+        ENCRYPTION_KEY_ENDPOINT_URL_NOT_CONFIGURED("60011", "WebSub Hub encryption key endpoint is not configured.",
+                "WebSub Hub encryption key endpoint is not configured."),
 
         //server errors.
         ERROR_REGISTERING_HUB_TOPIC("65001", "Error registering WebSub Hub topic.",
