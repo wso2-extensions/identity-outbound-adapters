@@ -165,14 +165,15 @@ public class WebSubHubAdapterUtil {
         String jsonString;
         try {
             jsonString = mapper.writeValueAsString(securityEventTokenPayload);
-            JSONParser jsonParser = new JSONParser();
-            JSONObject payloadJSON = (JSONObject) jsonParser.parse(jsonString);
             // Encrypt the event object in the payload.
             if (WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().isEncryptionEnabled()) {
+                JSONParser jsonParser = new JSONParser();
+                JSONObject payloadJSON = (JSONObject) jsonParser.parse(jsonString);
                 payloadJSON.put(PAYLOAD_EVENT_JSON_KEY, EventPayloadCryptographyUtils.encryptEventPayload(
                         payloadJSON.get(PAYLOAD_EVENT_JSON_KEY).toString(), tenantDomain));
+                jsonString = payloadJSON.toString();
             }
-            request.setEntity(new StringEntity(payloadJSON.toString()));
+            request.setEntity(new StringEntity(jsonString));
         } catch (IOException | IdentityEventException | ParseException e) {
             throw handleClientException(ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD);
         }
