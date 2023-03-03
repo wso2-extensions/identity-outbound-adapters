@@ -28,15 +28,17 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
-import sun.security.rsa.RSAPublicKeyImpl;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
@@ -141,7 +143,8 @@ public class EventPayloadCryptographyUtils {
                 }
                 byte[] publicKeyBytes =
                         Base64.getDecoder().decode(responseJSON.get(CRYPTO_KEY_RESPONSE_JSON_KEY).toString());
-                RSAPublicKey rsaPublicKey = RSAPublicKeyImpl.newKey(publicKeyBytes);
+                RSAPublicKey rsaPublicKey = (RSAPublicKey) KeyFactory.getInstance("RSA")
+                        .generatePublic(new X509EncodedKeySpec(publicKeyBytes));
                 RSAKey compositePublicKeyJWK = new RSAKey(Base64URL.encode(rsaPublicKey.getModulus()),
                         Base64URL.encode(rsaPublicKey.getPublicExponent()), null, null, null, null, null,
                         null, null, null, KeyUse.ENCRYPTION, null, JWEAlgorithm.RSA_OAEP_256,
@@ -153,6 +156,9 @@ public class EventPayloadCryptographyUtils {
         } catch (IOException e) {
             throw new IdentityEventException("Unable to fetch event encryption public key for tenant " +
                     tenantDomain, e);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new IdentityEventException(
+                    "Unable to generate RSA public key from the retrieved key due to invalid algorithm.", e);
         }
     }
 
