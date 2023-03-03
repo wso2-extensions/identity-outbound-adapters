@@ -156,7 +156,11 @@ public class EventPayloadCryptographyUtils {
         } catch (IOException e) {
             throw new IdentityEventException("Unable to fetch event encryption public key for tenant " +
                     tenantDomain, e);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (InvalidKeySpecException e) {
+            throw new IdentityEventException(
+                    "Unable to generate RSA public key from the retrieved key due to invalid key spec for tenant " +
+                            tenantDomain, e);
+        } catch (NoSuchAlgorithmException e) {
             throw new IdentityEventException(
                     "Unable to generate RSA public key from the retrieved key due to invalid algorithm.", e);
         }
