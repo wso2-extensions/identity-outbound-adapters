@@ -49,7 +49,6 @@ import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
 
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -64,6 +63,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.EVENT_ISSUER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_URI;
@@ -71,7 +71,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_HUB_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_OPERATION;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NO_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
@@ -281,10 +280,21 @@ public class WebSubHubAdapterUtil {
                                     topic, operation, responseString));
                         }
                     } else {
-                        throw handleServerException(ERROR_NO_RESPONSE_FROM_WEBSUB_HUB, null, topic, operation);
+                        String message =
+                                String.format(ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getDescription(), topic, operation);
+                        throw handleServerException(message, ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getCode());
                     }
                 } else {
-                    throw handleServerException(ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB, null, topic, operation);
+                    HttpEntity entity = response.getEntity();
+                    String responseString = "";
+                    if (entity != null) {
+                        responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                    }
+                    String message =
+                            String.format(ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getDescription(), topic, operation,
+                                    responseString);
+                    log.error(message + ", Response code:" + response.getStatusLine().getStatusCode());
+                    throw handleServerException(message, ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getCode());
                 }
             }
         }
@@ -358,5 +368,17 @@ public class WebSubHubAdapterUtil {
             description = String.format(description, data);
         }
         return new WebSubAdapterServerException(error.getMessage(), description, error.getCode(), throwable);
+    }
+
+    /**
+     * Returns a {@link WebSubAdapterServerException} on server related errors in WebSub Adapter.
+     *
+     * @param message the error message.
+     * @param errorCode  the error code.
+     * @return WebSubAdapterServerException
+     */
+    public static WebSubAdapterServerException handleServerException(String message, String errorCode) {
+
+        return new WebSubAdapterServerException(message, errorCode);
     }
 }
