@@ -153,9 +153,6 @@ public class EventPayloadCryptographyUtils {
                 orgJWKCache.put(jwkSet);
                 return convertJWKToPublicKey(jwkSet);
             }
-        } catch (IOException e) {
-            throw new IdentityEventException("Unable to fetch event encryption public key for tenant " +
-                    tenantDomain, e);
         } catch (InvalidKeySpecException e) {
             throw new IdentityEventException(
                     "Unable to generate RSA public key from the retrieved key due to invalid key spec for tenant " +
@@ -185,7 +182,7 @@ public class EventPayloadCryptographyUtils {
         }
     }
 
-    private static Resource retrieveKeyFromAPI(String tenantDomain) throws IOException, IdentityEventException {
+    private static Resource retrieveKeyFromAPI(String tenantDomain) throws IdentityEventException {
 
         // Retrieve key from the encryption key endpoint.
         DefaultResourceRetriever resourceRetriever =
@@ -196,14 +193,13 @@ public class EventPayloadCryptographyUtils {
         if (keyEndpointURLString == null) {
             throw new IdentityEventException("Event encryption public key endpoint URL is not configured.");
         }
-        URL keyEndpointURL = new URL(keyEndpointURLString);
         try {
-            resourceRetriever.retrieveResource(keyEndpointURL);
+            URL keyEndpointURL = new URL(keyEndpointURLString);
+            return resourceRetriever.retrieveResource(keyEndpointURL);
         } catch (IOException e) {
             log.error("Unable to retrieve event encryption public key from " + keyEndpointURLString, e);
             throw new IdentityEventException("Unable to retrieve event encryption public key from " +
                     keyEndpointURLString, e);
         }
-        return resourceRetriever.retrieveResource(keyEndpointURL);
     }
 }
