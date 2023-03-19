@@ -197,6 +197,13 @@ public class EventPayloadCryptographyUtils {
             throw new IdentityEventException("Event encryption public key endpoint URL is not configured.");
         }
         URL keyEndpointURL = new URL(keyEndpointURLString);
+        try {
+            resourceRetriever.retrieveResource(keyEndpointURL);
+        } catch (IOException e) {
+            log.error("Unable to retrieve event encryption public key from " + keyEndpointURLString, e);
+            throw new IdentityEventException("Unable to retrieve event encryption public key from " +
+                    keyEndpointURLString, e);
+        }
         return resourceRetriever.retrieveResource(keyEndpointURL);
     }
 }
