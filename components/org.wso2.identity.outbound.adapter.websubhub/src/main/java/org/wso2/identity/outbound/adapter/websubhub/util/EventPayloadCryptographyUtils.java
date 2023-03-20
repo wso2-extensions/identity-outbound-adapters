@@ -146,14 +146,16 @@ public class EventPayloadCryptographyUtils {
                 RSAPublicKey rsaPublicKey = (RSAPublicKey) KeyFactory.getInstance("RSA")
                         .generatePublic(new X509EncodedKeySpec(publicKeyBytes));
                 RSAKey compositePublicKeyJWK = new RSAKey(Base64URL.encode(rsaPublicKey.getModulus()),
-                        Base64URL.encode(rsaPublicKey.getPublicExponent()), null, null, null, null, null,
-                        null, null, null, KeyUse.ENCRYPTION, null, JWEAlgorithm.RSA_OAEP_256,
-                        null, null, null, null, null, null);
+                        Base64URL.encode(rsaPublicKey.getPublicExponent()), null, null, null, null,
+                        null, null, null, null, KeyUse.ENCRYPTION, null,
+                        JWEAlgorithm.RSA_OAEP_256, null, null, null, null, null, null);
                 JWKSet jwkSet = new JWKSet(Collections.singletonList(compositePublicKeyJWK));
                 orgJWKCache.put(jwkSet);
                 return convertJWKToPublicKey(jwkSet);
             }
         } catch (InvalidKeySpecException e) {
+            log.error("Unable to generate RSA public key from the retrieved key due to invalid key" +
+                    "spec for tenant : " + tenantDomain, e);
             throw new IdentityEventException(
                     "Unable to generate RSA public key from the retrieved key due to invalid key spec for tenant " +
                             tenantDomain, e);
@@ -177,6 +179,7 @@ public class EventPayloadCryptographyUtils {
             RSAKey rsaKey = (RSAKey) jwk;
             return rsaKey.toPublicKey();
         } else {
+            log.error("Unable to encrypt event as the encryption public key is not in RSA format.");
             throw new IdentityEventException("Event encryption public key is not in RSA format. " +
                     "Unable to encrypt event.");
         }
