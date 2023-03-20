@@ -154,7 +154,7 @@ public class EventPayloadCryptographyUtils {
                 return convertJWKToPublicKey(jwkSet);
             }
         } catch (InvalidKeySpecException e) {
-            log.error("Unable to generate RSA public key from the retrieved key due to invalid key" +
+            log.error("Unable to generate RSA public key from the retrieved key due to invalid key " +
                     "spec for tenant : " + tenantDomain, e);
             throw new IdentityEventException(
                     "Unable to generate RSA public key from the retrieved key due to invalid key spec for tenant " +
