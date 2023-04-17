@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
@@ -53,7 +54,14 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.wso2.carbon.identity.claim.metadata.mgt.util.ClaimMetadataUtils.CORRELATION_ID_MDC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.DEREGISTER;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_REASON;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_PARAM_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_SEPARATOR;
 
 /**
@@ -69,12 +77,13 @@ public class WebSubHubAdapterUtilTest {
     private static final String TEST_PROPERTY = "test-property";
     private static final int TEST_ORG_ID = 999;
     private static final String INVALID_RESPONSE = "INVALID_RESPONSE";
+    private static final String HUB_MODE_DENIED = HUB_MODE + "=" + "denied";
 
     private MockedStatic<HttpClientBuilder> mockStaticHttpClientBuilder;
 
     private enum ResponseStatus {
 
-        STATUS_NOT_200, NULL_ENTITY, NON_SUCCESS_OPERATION
+        STATUS_NOT_200, NULL_ENTITY, NON_SUCCESS_OPERATION, FORBIDDEN_TOPIC_DEREG_FAILURE, FORBIDDEN
     }
 
 
@@ -221,6 +230,10 @@ public class WebSubHubAdapterUtilTest {
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NULL_ENTITY,
                         WebSubAdapterServerException.class},
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NON_SUCCESS_OPERATION, null},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, DEREGISTER, ResponseStatus.FORBIDDEN_TOPIC_DEREG_FAILURE,
+                        WebSubAdapterClientException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.FORBIDDEN,
+                        WebSubAdapterServerException.class},
         };
     }
 
@@ -259,6 +272,22 @@ public class WebSubHubAdapterUtilTest {
             when(mockEntity.getContent()).thenReturn(
                     new ByteArrayInputStream(RESPONSE_FOR_SUCCESSFUL_OPERATION.getBytes(StandardCharsets.UTF_8)));
         }
+
+        if (responseStatus == ResponseStatus.FORBIDDEN_TOPIC_DEREG_FAILURE) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
+            String responseContent = HUB_MODE_DENIED + URL_PARAM_SEPARATOR + HUB_REASON + URL_KEY_VALUE_SEPARATOR +
+                    String.format(ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS, TEST_TOPIC) + URL_PARAM_SEPARATOR +
+                    HUB_ACTIVE_SUBS + URL_KEY_VALUE_SEPARATOR + "subscriber_1,subscriber_2";
+            when(mockEntity.getContent()).thenReturn(
+                    new ByteArrayInputStream(responseContent.getBytes(StandardCharsets.UTF_8)));
+        }
+
+        if (responseStatus == ResponseStatus.FORBIDDEN) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
+            doReturn(new ByteArrayInputStream(HUB_MODE_DENIED.getBytes(StandardCharsets.UTF_8))).when(mockEntity)
+                    .getContent();
+        }
+
         try {
             WebSubHubAdapterUtil.makeTopicMgtAPICall(topic, webSubHubBaseUrl, operation);
 
