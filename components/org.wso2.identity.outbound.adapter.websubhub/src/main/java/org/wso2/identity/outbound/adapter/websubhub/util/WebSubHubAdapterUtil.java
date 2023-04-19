@@ -401,6 +401,7 @@ public class WebSubHubAdapterUtil {
 
     /**
      * This method parses the urlencoded response from the event hub and returns the contents as a map.
+     *
      * @param response Response from the event hub.
      * @return Map of the response content.
      * @throws IOException If an error occurs while parsing the response.
