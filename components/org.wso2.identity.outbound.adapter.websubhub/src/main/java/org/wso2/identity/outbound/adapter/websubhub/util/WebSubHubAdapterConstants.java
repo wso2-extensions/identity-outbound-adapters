@@ -106,7 +106,7 @@ public class WebSubHubAdapterConstants {
                 "Server error encountered while preparing SSL context for WebSubHub http client."),
         ERROR_CREATING_ASYNC_HTTP_CLIENT("65008", "Error while creating the Async HTTP client.",
                 "Server error encountered while creating the Async HTTP Client of WebSub Hub Adapter."),
-        TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS("65016", "Error occurred while de-registering topic", "Backend error" +
+        TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS("65009", "Error occurred while de-registering topic", "Backend error" +
                 " received from WebSubHub while attempting to de-register topic: %s. Active subscribers: %s.");
 
         private final String code;
