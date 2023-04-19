@@ -27,13 +27,19 @@ public class WebSubHubAdapterConstants {
     public static final String AUDIENCE_BASE_URL = "https://websubhub/topics/";
     public static final String URL_SEPARATOR = "/";
     public static final String TOPIC_SEPARATOR = "-";
+    public static final String URL_PARAM_SEPARATOR = "&";
+    public static final String URL_KEY_VALUE_SEPARATOR = "=";
     public static final String PUBLISH = "publish";
     public static final String HUB_MODE = "hub.mode";
     public static final String HUB_TOPIC = "hub.topic";
+    public static final String HUB_REASON = "hub.reason";
+    public static final String HUB_ACTIVE_SUBS = "hub.active.subscribers";
     public static final String REGISTER = "register";
     public static final String DEREGISTER = "deregister";
     public static final String ACCEPTED = "accepted";
     public static final String RESPONSE_FOR_SUCCESSFUL_OPERATION = HUB_MODE + "=" + ACCEPTED;
+    public static final String ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS = "Topic %s could not be deregistered " +
+            "as there are active subscribers";
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
     public static final Integer DEFAULT_HTTP_CONNECTION_TIMEOUT = 300;
     public static final Integer DEFAULT_HTTP_READ_TIMEOUT = 300;
@@ -99,7 +105,9 @@ public class WebSubHubAdapterConstants {
         ERROR_CREATING_SSL_CONTEXT("65007", "Error while preparing SSL context for WebSubHub http client.",
                 "Server error encountered while preparing SSL context for WebSubHub http client."),
         ERROR_CREATING_ASYNC_HTTP_CLIENT("65008", "Error while creating the Async HTTP client.",
-                "Server error encountered while creating the Async HTTP Client of WebSub Hub Adapter.");
+                "Server error encountered while creating the Async HTTP Client of WebSub Hub Adapter."),
+        TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS("65009", "Error occurred while de-registering topic", "Backend error" +
+                " received from WebSubHub while attempting to de-register topic: %s. Active subscribers: %s.");
 
         private final String code;
         private final String message;

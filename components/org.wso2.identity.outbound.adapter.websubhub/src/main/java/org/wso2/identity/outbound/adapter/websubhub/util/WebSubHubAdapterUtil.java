@@ -61,6 +61,7 @@ import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.EVENT_ISSUER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB;
@@ -73,11 +74,16 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_REASON;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PAYLOAD_EVENT_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PUBLISH;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_PARAM_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_SEPARATOR;
 
 /**
@@ -285,6 +291,17 @@ public class WebSubHubAdapterUtil {
                         throw handleServerException(message, ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getCode());
                     }
                 } else {
+                    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_FORBIDDEN) {
+                        Map<String, String> hubResponse = parseEventHubResponse(response);
+                        if (!hubResponse.isEmpty() && hubResponse.containsKey(HUB_REASON)) {
+                            String errorMsg = String.format(ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS, topic);
+                            // If topic de-registration failed due to active subscriptions, throw a client exception.
+                            if (errorMsg.equals(hubResponse.get(HUB_REASON))) {
+                                throw handleClientException(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS, topic,
+                                        hubResponse.get(HUB_ACTIVE_SUBS));
+                            }
+                        }
+                    }
                     HttpEntity entity = response.getEntity();
                     String responseString = "";
                     if (entity != null) {
@@ -381,4 +398,34 @@ public class WebSubHubAdapterUtil {
 
         return new WebSubAdapterServerException(message, errorCode);
     }
+
+    /**
+     * This method parses the urlencoded response from the event hub and returns the contents as a map.
+     *
+     * @param response Response from the event hub.
+     * @return Map of the response content.
+     * @throws IOException If an error occurs while parsing the response.
+     */
+    public static Map<String, String> parseEventHubResponse(CloseableHttpResponse response) throws IOException {
+
+        Map<String, String> map = new HashMap<>();
+        HttpEntity entity = response.getEntity();
+
+        if (entity != null) {
+            String responseContent = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+            if (log.isDebugEnabled()) {
+                log.debug("Parsing response content from event hub: " + responseContent);
+            }
+            String[] responseParams = responseContent.split(URL_PARAM_SEPARATOR);
+            for (String param : responseParams) {
+                String[] keyValuePair = param.split(URL_KEY_VALUE_SEPARATOR);
+                // keyValuePair should contain key and value.
+                if (keyValuePair.length == 2) {
+                    map.put(keyValuePair[0], keyValuePair[1]);
+                }
+            }
+        }
+        return map;
+    }
+
 }
