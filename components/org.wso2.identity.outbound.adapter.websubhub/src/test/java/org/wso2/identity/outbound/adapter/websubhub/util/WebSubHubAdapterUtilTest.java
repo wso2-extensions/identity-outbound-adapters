@@ -59,6 +59,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_REASON;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.REGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_PARAM_SEPARATOR;
@@ -70,8 +71,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 public class WebSubHubAdapterUtilTest {
 
     private static final String WEBSUB_HUB_BASE_URL = "https://test.com/websub/hub";
-    private static final String TEST_OPERATION_SUBSCRIBE = "register";
-    private static final String TEST_OPERATION_UNSUB = "deregister";
     private static final String TEST_EVENT = "urn:ietf:params:testEvent";
     private static final String TEST_TOPIC = "TEST-TOPIC";
     private static final String TEST_ORG_NAME = "test-org";
@@ -222,22 +221,22 @@ public class WebSubHubAdapterUtilTest {
 
         return new Object[][]{
                 // topic, websub hub base URL, operation, responseStatus, expectedException
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, null, null},
-                {null, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, null, WebSubAdapterClientException.class},
-                {TEST_TOPIC, null, TEST_OPERATION_SUBSCRIBE, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, REGISTER, null, null},
+                {null, WEBSUB_HUB_BASE_URL, REGISTER, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, null, REGISTER, null, WebSubAdapterClientException.class},
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, null, null, WebSubAdapterClientException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.STATUS_NOT_200,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, REGISTER, ResponseStatus.STATUS_NOT_200,
                         WebSubAdapterServerException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.NULL_ENTITY,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, REGISTER, ResponseStatus.NULL_ENTITY,
                         WebSubAdapterServerException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.NON_SUCCESS_OPERATION,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, REGISTER, ResponseStatus.NON_SUCCESS_OPERATION,
                         WebSubAdapterServerException.class},
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, DEREGISTER, ResponseStatus.FORBIDDEN_TOPIC_DEREG_FAILURE,
                         WebSubAdapterClientException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.FORBIDDEN,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, REGISTER, ResponseStatus.FORBIDDEN,
                         WebSubAdapterServerException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.REG_CONFLICT, null},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_UNSUB, ResponseStatus.DEREG_NOT_FOUND, null}
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, REGISTER, ResponseStatus.REG_CONFLICT, null},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, DEREGISTER, ResponseStatus.DEREG_NOT_FOUND, null}
         };
     }
 
