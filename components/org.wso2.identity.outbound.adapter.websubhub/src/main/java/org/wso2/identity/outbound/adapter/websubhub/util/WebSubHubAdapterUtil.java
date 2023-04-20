@@ -61,6 +61,7 @@ import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.DEREGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.EVENT_ISSUER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
@@ -81,6 +82,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_TOPIC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PAYLOAD_EVENT_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PUBLISH;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.REGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_PARAM_SEPARATOR;
@@ -268,7 +270,8 @@ public class WebSubHubAdapterUtil {
             HttpPost httpPost = new HttpPost(topicMgtUrl);
             httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                int responseCode = response.getStatusLine().getStatusCode();
+                if (responseCode == HttpStatus.SC_OK) {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
                         String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
@@ -277,26 +280,37 @@ public class WebSubHubAdapterUtil {
                                 log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic);
                             }
                         } else {
-                            // Since the endpoint respond with http status code 200, adapter accepts the response as a
-                            // success and log it as a warning. In current implementation this only happens
-                            // 1. if the topic exists when registering the topic.
-                            // 2. if the topic doesn't exist when de-registering the topic
-                            // TODO: This will have to be updated when the websub hub error responses are updated.
-                            log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
-                                    topic, operation, responseString));
+                            throw handleServerException(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB, null, topic,
+                                    operation, responseString);
                         }
                     } else {
                         String message =
                                 String.format(ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getDescription(), topic, operation);
                         throw handleServerException(message, ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getCode());
                     }
+                } else if ((responseCode == HttpStatus.SC_CONFLICT && operation.equals(REGISTER)) ||
+                        (responseCode == HttpStatus.SC_NOT_FOUND && operation.equals(DEREGISTER))) {
+                    // Since the endpoint responds with http status code 409 for registration or 404 for
+                    // de-registration, adapter accepts the response as a success and log it as a warning.
+                    // In current implementation this only happens,
+                    // 1. if the topic exists when registering the topic (409).
+                    // 2. if the topic doesn't exist when de-registering the topic (404).
+                    HttpEntity entity = response.getEntity();
+                    String responseString = "";
+                    if (entity != null) {
+                        responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                    }
+                    log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
+                            topic, operation, responseString));
                 } else {
-                    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_FORBIDDEN) {
+                    if (responseCode == HttpStatus.SC_FORBIDDEN) {
                         Map<String, String> hubResponse = parseEventHubResponse(response);
                         if (!hubResponse.isEmpty() && hubResponse.containsKey(HUB_REASON)) {
                             String errorMsg = String.format(ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS, topic);
                             // If topic de-registration failed due to active subscriptions, throw a client exception.
                             if (errorMsg.equals(hubResponse.get(HUB_REASON))) {
+                                log.info(String.format(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS.getDescription(),
+                                        topic, hubResponse.get(HUB_ACTIVE_SUBS)));
                                 throw handleClientException(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS, topic,
                                         hubResponse.get(HUB_ACTIVE_SUBS));
                             }
@@ -310,7 +324,7 @@ public class WebSubHubAdapterUtil {
                     String message =
                             String.format(ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getDescription(), topic, operation,
                                     responseString);
-                    log.error(message + ", Response code:" + response.getStatusLine().getStatusCode());
+                    log.error(message + ", Response code:" + responseCode);
                     throw handleServerException(message, ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getCode());
                 }
             }

@@ -70,7 +70,8 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 public class WebSubHubAdapterUtilTest {
 
     private static final String WEBSUB_HUB_BASE_URL = "https://test.com/websub/hub";
-    private static final String TEST_OPERATION = "subscribe";
+    private static final String TEST_OPERATION_SUBSCRIBE = "register";
+    private static final String TEST_OPERATION_UNSUB = "deregister";
     private static final String TEST_EVENT = "urn:ietf:params:testEvent";
     private static final String TEST_TOPIC = "TEST-TOPIC";
     private static final String TEST_ORG_NAME = "test-org";
@@ -83,9 +84,9 @@ public class WebSubHubAdapterUtilTest {
 
     private enum ResponseStatus {
 
-        STATUS_NOT_200, NULL_ENTITY, NON_SUCCESS_OPERATION, FORBIDDEN_TOPIC_DEREG_FAILURE, FORBIDDEN
+        STATUS_NOT_200, NULL_ENTITY, NON_SUCCESS_OPERATION, FORBIDDEN_TOPIC_DEREG_FAILURE, FORBIDDEN,
+        REG_CONFLICT, DEREG_NOT_FOUND
     }
-
 
     @BeforeClass
     public void setup() {
@@ -221,19 +222,22 @@ public class WebSubHubAdapterUtilTest {
 
         return new Object[][]{
                 // topic, websub hub base URL, operation, responseStatus, expectedException
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, null, null},
-                {null, WEBSUB_HUB_BASE_URL, TEST_OPERATION, null, WebSubAdapterClientException.class},
-                {TEST_TOPIC, null, TEST_OPERATION, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, null, null},
+                {null, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, null, WebSubAdapterClientException.class},
+                {TEST_TOPIC, null, TEST_OPERATION_SUBSCRIBE, null, WebSubAdapterClientException.class},
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, null, null, WebSubAdapterClientException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.STATUS_NOT_200,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.STATUS_NOT_200,
                         WebSubAdapterServerException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NULL_ENTITY,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.NULL_ENTITY,
                         WebSubAdapterServerException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.NON_SUCCESS_OPERATION, null},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.NON_SUCCESS_OPERATION,
+                        WebSubAdapterServerException.class},
                 {TEST_TOPIC, WEBSUB_HUB_BASE_URL, DEREGISTER, ResponseStatus.FORBIDDEN_TOPIC_DEREG_FAILURE,
                         WebSubAdapterClientException.class},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION, ResponseStatus.FORBIDDEN,
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.FORBIDDEN,
                         WebSubAdapterServerException.class},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_SUBSCRIBE, ResponseStatus.REG_CONFLICT, null},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_OPERATION_UNSUB, ResponseStatus.DEREG_NOT_FOUND, null}
         };
     }
 
@@ -255,6 +259,10 @@ public class WebSubHubAdapterUtilTest {
 
         if (responseStatus == ResponseStatus.STATUS_NOT_200) {
             when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+        } else if (responseStatus == ResponseStatus.REG_CONFLICT) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_CONFLICT);
+        } else if (responseStatus == ResponseStatus.DEREG_NOT_FOUND) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
         } else {
             when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
         }
