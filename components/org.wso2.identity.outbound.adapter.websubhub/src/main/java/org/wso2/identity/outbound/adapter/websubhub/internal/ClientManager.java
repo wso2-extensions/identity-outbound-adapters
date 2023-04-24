@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 
 import javax.net.ssl.SSLContext;
 
@@ -124,12 +125,14 @@ public class ClientManager {
 
         try {
             SSLContext sslContext = SSLContexts.custom()
+                    .loadKeyMaterial(WebSubHubAdapterDataHolder.getInstance().getKeyStore(),
+                            WebSubHubAdapterDataHolder.getInstance().getKeyStorePassword().toCharArray())
                     .loadTrustMaterial(WebSubHubAdapterDataHolder.getInstance().getTrustStore(), null)
                     .build();
             builder.setSSLContext(sslContext);
             builder.setSSLHostnameVerifier(new DefaultHostnameVerifier());
 
-        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException | UnrecoverableKeyException e) {
             throw handleServerException(ERROR_CREATING_SSL_CONTEXT, e);
         }
     }
