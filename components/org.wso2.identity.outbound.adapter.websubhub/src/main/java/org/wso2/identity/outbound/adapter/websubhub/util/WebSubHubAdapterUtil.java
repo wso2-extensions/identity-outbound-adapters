@@ -27,6 +27,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
@@ -271,11 +272,16 @@ public class WebSubHubAdapterUtil {
             httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
 
             WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(httpPost);
+            final long requestStartTime = System.currentTimeMillis();
 
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                int responseCode = response.getStatusLine().getStatusCode();
+                StatusLine statusLine = response.getStatusLine();
+                int responseCode = statusLine.getStatusCode();
+                String responsePhrase = statusLine.getReasonPhrase();
                 if (responseCode == HttpStatus.SC_OK) {
                     HttpEntity entity = response.getEntity();
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
                     if (entity != null) {
                         String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
                         if (RESPONSE_FOR_SUCCESSFUL_OPERATION.equals(responseString)) {
@@ -300,12 +306,16 @@ public class WebSubHubAdapterUtil {
                     // 2. if the topic doesn't exist when de-registering the topic (404).
                     HttpEntity entity = response.getEntity();
                     String responseString = "";
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.FAILED.getStatus(), String.valueOf(responseCode), responsePhrase);
                     if (entity != null) {
                         responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
                     }
                     log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
                             topic, operation, responseString));
                 } else {
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.CANCELLED.getStatus(), String.valueOf(responseCode), responsePhrase);
                     if (responseCode == HttpStatus.SC_FORBIDDEN) {
                         Map<String, String> hubResponse = parseEventHubResponse(response);
                         if (!hubResponse.isEmpty() && hubResponse.containsKey(HUB_REASON)) {
