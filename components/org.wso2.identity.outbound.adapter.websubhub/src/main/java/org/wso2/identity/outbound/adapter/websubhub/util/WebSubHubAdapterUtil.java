@@ -269,6 +269,9 @@ public class WebSubHubAdapterUtil {
 
             HttpPost httpPost = new HttpPost(topicMgtUrl);
             httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(httpPost);
+
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 int responseCode = response.getStatusLine().getStatusCode();
                 if (responseCode == HttpStatus.SC_OK) {
