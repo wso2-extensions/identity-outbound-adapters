@@ -51,13 +51,15 @@ public class WebSubHubAdapterServiceComponent {
                     webSubHubEventAdapter, null);
             WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
                     OutboundAdapterConfigurationProvider.getInstance()));
-            WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
-            WebSubHubAdapterDataHolder.getInstance().setResourceRetriever(new DefaultResourceRetriever());
 
             KeyStoreManager keyStoreMan = KeyStoreManager.getInstance(
                     MultitenantConstants.SUPER_TENANT_ID);
             WebSubHubAdapterDataHolder.getInstance().setKeyStore(keyStoreMan.getPrimaryKeyStore());
             WebSubHubAdapterDataHolder.getInstance().setKeyStorePassword(keyStoreMan.getPrimaryPrivateKeyPasssword());
+
+            WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
+            WebSubHubAdapterDataHolder.getInstance().setResourceRetriever(new DefaultResourceRetriever());
+
             if (log.isDebugEnabled()) {
                 log.debug("Successfully activated the WebSub Hub adapter service.");
             }
