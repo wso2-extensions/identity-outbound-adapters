@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
@@ -371,13 +370,18 @@ public class WebSubHubAdapterUtil {
 
     /**
      * Get correlation id from the MDC.
-     * If not then generate a random UUID and return the UUID.
+     * If not then generate a random UUID, add it to MDC and return the UUID.
      *
      * @return Correlation id
      */
     public static String getCorrelationID() {
-
-        return Optional.ofNullable(MDC.get(CORRELATION_ID_MDC)).orElse(UUID.randomUUID().toString());
+        
+        String correlationID = MDC.get(CORRELATION_ID_MDC);
+        if (StringUtils.isBlank(correlationID)) {
+            correlationID = UUID.randomUUID().toString();
+            MDC.put(CORRELATION_ID_MDC, correlationID);
+        }
+        return correlationID;
     }
 
     /**
