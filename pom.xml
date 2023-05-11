@@ -319,5 +319,7 @@
 
         <testng.version>6.9.10</testng.version>
         <mockito.version>4.9.0</mockito.version>
+
+        <org.slf4j.imp.pkg.version.range>[1.5.5,2.0.0)</org.slf4j.imp.pkg.version.range>
     </properties>
 </project>
