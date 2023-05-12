@@ -208,25 +208,21 @@ public class WebSubHubAdapterUtil {
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
                     if (log.isDebugEnabled()) {
-                        String jsonString;
+                        String responseBody;
                         try {
-                            jsonString = EntityUtils.toString(response.getEntity());
-                            JSONParser parser = new JSONParser();
-                            JSONObject json = (JSONObject) parser.parse(jsonString);
-                            log.debug("Response data: " + json);
-                        } catch (IOException | ParseException e) {
+                            responseBody = EntityUtils.toString(response.getEntity());
+                            log.debug("Response data: " + responseBody);
+                        } catch (IOException e) {
                             log.debug("Error while reading WebSubHub event publisher response. ", e);
                         }
                     }
                 } else {
                     log.error("WebHubSub event publisher received " + responseCode + " code.");
-                    String jsonString;
+                    String errorResponseBody;
                     try {
-                        jsonString = EntityUtils.toString(response.getEntity());
-                        JSONParser parser = new JSONParser();
-                        JSONObject json = (JSONObject) parser.parse(jsonString);
-                        log.error("Response data: " + json);
-                    } catch (IOException | ParseException e) {
+                        errorResponseBody = EntityUtils.toString(response.getEntity());
+                        log.error("Response data: " + errorResponseBody);
+                    } catch (IOException e) {
                         log.error("Error while reading WebSubHub event publisher response. ", e);
                     }
                 }
