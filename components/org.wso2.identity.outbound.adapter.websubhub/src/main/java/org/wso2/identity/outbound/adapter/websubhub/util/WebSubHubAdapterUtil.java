@@ -240,7 +240,7 @@ public class WebSubHubAdapterUtil {
             @Override
             public void cancelled() {
 
-                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus());
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.CANCELLED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });
