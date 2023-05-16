@@ -202,8 +202,9 @@ public class WebSubHubAdapterUtil {
                 if (log.isDebugEnabled()) {
                     log.debug("WebSubHub request completed. Response code: " + responseCode);
                 }
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                        RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.COMPLETED.getStatus(),
+                        String.valueOf(responseCode), responsePhrase);
+
 
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
@@ -231,16 +232,15 @@ public class WebSubHubAdapterUtil {
             @Override
             public void failed(final Exception ex) {
 
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                        RequestStatus.FAILED.getStatus(), ex.getMessage());
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus(),
+                        ex.getMessage());
                 log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
             @Override
             public void cancelled() {
 
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                        RequestStatus.CANCELLED.getStatus());
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });
@@ -455,4 +455,21 @@ public class WebSubHubAdapterUtil {
         return map;
     }
 
+    /**
+     * This method handles the correlation log for responses received by the websubhub.
+     *
+     * @param request          Request sent to the websubhub.
+     * @param requestStartTime Start time of the request.
+     * @param otherParams      Other parameters to be logged.
+     */
+    private static void handleResponseCorrelationLog(HttpPost request, long requestStartTime, String... otherParams) {
+
+        try {
+            MDC.put(CORRELATION_ID_MDC, request.getFirstHeader(CORRELATION_ID_REQUEST_HEADER).getValue());
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+                    otherParams);
+        } finally {
+            MDC.remove(CORRELATION_ID_MDC);
+        }
+    }
 }
