@@ -466,8 +466,7 @@ public class WebSubHubAdapterUtil {
 
         try {
             MDC.put(CORRELATION_ID_MDC, request.getFirstHeader(CORRELATION_ID_REQUEST_HEADER).getValue());
-            WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                    otherParams);
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime, otherParams);
         } finally {
             MDC.remove(CORRELATION_ID_MDC);
         }
