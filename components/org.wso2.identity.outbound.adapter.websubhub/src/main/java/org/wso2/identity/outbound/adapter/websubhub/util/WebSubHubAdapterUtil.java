@@ -23,18 +23,19 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.client5.http.async.methods.SimpleRequestBuilder;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -47,7 +48,7 @@ import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterServe
 import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
-import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
+//import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -163,10 +164,10 @@ public class WebSubHubAdapterUtil {
 
         String url = buildURL(topic, webSubHubBaseUrl, PUBLISH);
 
-        HttpPost request = new HttpPost(url);
-        request.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
-        request.setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
-        request.setHeader(CORRELATION_ID_REQUEST_HEADER, getCorrelationID());
+        SimpleRequestBuilder requestBuilder = SimpleRequestBuilder.post(url)
+                .setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType())
+                .setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType())
+                .setHeader(CORRELATION_ID_REQUEST_HEADER, getCorrelationID());
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonString;
@@ -180,7 +181,7 @@ public class WebSubHubAdapterUtil {
                         payloadJSON.get(PAYLOAD_EVENT_JSON_KEY).toString(), tenantDomain));
                 jsonString = payloadJSON.toString();
             }
-            request.setEntity(new StringEntity(jsonString));
+            requestBuilder.setBody(jsonString, org.apache.hc.core5.http.ContentType.APPLICATION_JSON);
         } catch (IOException | IdentityEventException | ParseException e) {
             throw handleClientException(ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD);
         }
@@ -191,60 +192,53 @@ public class WebSubHubAdapterUtil {
             log.debug("Publishing event data to WebSubHub. URL: " + url + " tenant domain: " + tenantDomain);
         }
 
-        WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(request);
-        final long requestStartTime = System.currentTimeMillis();
-        client.execute(request, new FutureCallback<HttpResponse>() {
-            @Override
-            public void completed(final HttpResponse response) {
+        SimpleHttpRequest request = requestBuilder.build();
 
-                int responseCode = response.getStatusLine().getStatusCode();
-                String responsePhrase = response.getStatusLine().getReasonPhrase();
+        // TODO: Correlation Log for request.
+//        WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(request);
+//        final long requestStartTime = System.currentTimeMillis();
+        client.execute(request, new FutureCallback<SimpleHttpResponse>() {
+            @Override
+            public void completed(final SimpleHttpResponse response) {
+
+                int responseCode = response.getCode();
+//                String responsePhrase = response.getReasonPhrase();
                 if (log.isDebugEnabled()) {
                     log.debug("WebSubHub request completed. Response code: " + responseCode);
                 }
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                        RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
+
+                // TODO: Correlation Log for response.
+//                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+//                        RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
 
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
                     if (log.isDebugEnabled()) {
-                        String jsonString;
-                        try {
-                            jsonString = EntityUtils.toString(response.getEntity());
-                            JSONParser parser = new JSONParser();
-                            JSONObject json = (JSONObject) parser.parse(jsonString);
-                            log.debug("Response data: " + json);
-                        } catch (IOException | ParseException e) {
-                            log.debug("Error while reading WebSubHub event publisher response. ", e);
-                        }
+                        String responseBody = response.getBodyText();
+                        log.debug("Response data: " + responseBody);
                     }
                 } else {
                     log.error("WebHubSub event publisher received " + responseCode + " code.");
-                    String jsonString;
-                    try {
-                        jsonString = EntityUtils.toString(response.getEntity());
-                        JSONParser parser = new JSONParser();
-                        JSONObject json = (JSONObject) parser.parse(jsonString);
-                        log.error("Response data: " + json);
-                    } catch (IOException | ParseException e) {
-                        log.error("Error while reading WebSubHub event publisher response. ", e);
-                    }
+                    String responseBody = response.getBodyText();
+                    log.debug("Response data: " + responseBody);
                 }
             }
 
             @Override
-            public void failed(final Exception ex) {
+            public void failed(Exception ex) {
 
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                        RequestStatus.FAILED.getStatus(), ex.getMessage());
+                // TODO: Correlation Log for error.
+//                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+//                        RequestStatus.FAILED.getStatus(), ex.getMessage());
                 log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
             @Override
             public void cancelled() {
 
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-                        RequestStatus.CANCELLED.getStatus());
+                // TODO: Correlation Log for error 2.
+//                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
+//                        RequestStatus.CANCELLED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });

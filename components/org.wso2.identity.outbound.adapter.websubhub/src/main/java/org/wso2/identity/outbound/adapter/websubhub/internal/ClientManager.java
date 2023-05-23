@@ -20,14 +20,21 @@ package org.wso2.identity.outbound.adapter.websubhub.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.client.config.RequestConfig;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.config.TlsConfig;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder;
+import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
+import org.apache.hc.core5.http2.HttpVersionPolicy;
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
+import org.apache.hc.core5.pool.PoolReusePolicy;
+import org.apache.hc.core5.reactor.IOReactorConfig;
+import org.apache.hc.core5.reactor.IOReactorStatus;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
-import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.ssl.SSLContexts;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 
@@ -36,6 +43,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
@@ -60,18 +68,19 @@ public class ClientManager {
      */
     public ClientManager() throws WebSubAdapterException {
 
-        PoolingNHttpClientConnectionManager connectionManager;
+        PoolingAsyncClientConnectionManager connectionManager;
         try {
             connectionManager = createPoolingConnectionManager();
         } catch (IOException e) {
             throw handleServerException(ERROR_CREATING_ASYNC_HTTP_CLIENT, e);
         }
 
-        RequestConfig config = createRequestConfig();
-        HttpAsyncClientBuilder httpClientBuilder = HttpAsyncClients.custom().setDefaultRequestConfig(config);
-        addSslContext(httpClientBuilder);
-        httpClientBuilder.setConnectionManager(connectionManager);
-        httpAsyncClient = httpClientBuilder.build();
+        httpAsyncClient = HttpAsyncClients.custom()
+                .setConnectionManager(connectionManager)
+                .setIOReactorConfig(IOReactorConfig.custom().build())
+                .setDefaultRequestConfig(RequestConfig.custom().build())
+                .build();
+
         httpAsyncClient.start();
     }
 
@@ -84,44 +93,32 @@ public class ClientManager {
 
         if (isNull(httpAsyncClient)) {
             throw handleServerException(ERROR_GETTING_ASYNC_CLIENT, null);
-        } else if (!httpAsyncClient.isRunning()) {
+        } else if (!httpAsyncClient.getStatus().equals(IOReactorStatus.ACTIVE)) {
             httpAsyncClient.start();
         }
         return httpAsyncClient;
     }
 
-    private RequestConfig createRequestConfig() {
-
-        return RequestConfig.custom()
-                .setConnectTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
-                        .getHTTPConnectionTimeout())
-                .setConnectionRequestTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
-                        .getHttpConnectionRequestTimeout())
-                .setSocketTimeout(
-                        WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().getHttpReadTimeout())
-                .setRedirectsEnabled(false)
-                .setRelativeRedirectsAllowed(false)
-                .build();
-    }
-
-    private PoolingNHttpClientConnectionManager createPoolingConnectionManager() throws IOException {
+    private PoolingAsyncClientConnectionManager createPoolingConnectionManager()
+            throws IOException, WebSubAdapterException {
 
         int maxConnections = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
                 .getDefaultMaxConnections();
         int maxConnectionsPerRoute = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
                 .getDefaultMaxConnectionsPerRoute();
 
-        ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
-        PoolingNHttpClientConnectionManager poolingHttpClientConnectionMgr = new
-                PoolingNHttpClientConnectionManager(ioReactor);
-        // Increase max total connection to 20.
-        poolingHttpClientConnectionMgr.setMaxTotal(maxConnections);
-        // Increase default max connection per route to 20.
-        poolingHttpClientConnectionMgr.setDefaultMaxPerRoute(maxConnectionsPerRoute);
-        return poolingHttpClientConnectionMgr;
+        return PoolingAsyncClientConnectionManagerBuilder.create()
+                .setTlsStrategy(createTlsStrategy())
+                .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+                .setConnPoolPolicy(PoolReusePolicy.LIFO)
+                .setMaxConnTotal(maxConnections)
+                .setMaxConnPerRoute(maxConnectionsPerRoute)
+                .setDefaultConnectionConfig(createConnectionConfig())
+                .setDefaultTlsConfig(createTlsConfig())
+                .build();
     }
 
-    private void addSslContext(HttpAsyncClientBuilder builder) throws WebSubAdapterException {
+    private TlsStrategy createTlsStrategy() throws WebSubAdapterException {
 
         try {
             SSLContext sslContext = SSLContexts.custom()
@@ -129,11 +126,32 @@ public class ClientManager {
                             WebSubHubAdapterDataHolder.getInstance().getKeyStorePassword().toCharArray())
                     .loadTrustMaterial(WebSubHubAdapterDataHolder.getInstance().getTrustStore(), null)
                     .build();
-            builder.setSSLContext(sslContext);
-            builder.setSSLHostnameVerifier(new DefaultHostnameVerifier());
 
+            return ClientTlsStrategyBuilder.create()
+                    .setSslContext(sslContext)
+                    .setHostnameVerifier(new DefaultHostnameVerifier())
+                    .build();
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException | UnrecoverableKeyException e) {
             throw handleServerException(ERROR_CREATING_SSL_CONTEXT, e);
         }
+    }
+
+    private ConnectionConfig createConnectionConfig() {
+
+        return ConnectionConfig.custom()
+                .setSocketTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHttpReadTimeout(), TimeUnit.MILLISECONDS)
+                .setConnectTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHTTPConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .build();
+    }
+
+    private TlsConfig createTlsConfig() {
+
+        return TlsConfig.custom()
+                .setVersionPolicy(HttpVersionPolicy.NEGOTIATE)
+                .setHandshakeTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                        .getHandshakeTimeout(), TimeUnit.MILLISECONDS)
+                .build();
     }
 }

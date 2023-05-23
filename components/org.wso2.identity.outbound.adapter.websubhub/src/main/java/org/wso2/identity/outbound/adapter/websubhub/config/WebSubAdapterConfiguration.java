@@ -34,6 +34,7 @@ public class WebSubAdapterConfiguration {
     private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
     private static final String ENCRYPTION_ENABLED_CONFIG = "adapter.websubhub.encryptionEnabled";
     private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
+    private static final String CONNECTION_HANDSHAKE_TIMEOUT = "adapter.websubhub.connectionHandshakeTimeout";
     private static final String HTTP_CONNECTION_TIMEOUT = "adapter.websubhub.httpConnectionTimeout";
     private static final String HTTP_READ_TIMEOUT = "adapter.websubhub.httpReadTimeout";
     private static final String HTTP_CONNECTION_REQUEST_TIMEOUT = "adapter.websubhub.httpConnectionRequestTimeout";
@@ -44,6 +45,7 @@ public class WebSubAdapterConfiguration {
     private static final String ENCRYPTION_KEY_CACHE_LIFESPAN = "adapter.websubhub.encryptionKeyCacheLifespan";
     private final boolean adapterEnabled;
     private final boolean encryptionEnabled;
+    private final int connectionHandshakeTimeout;
     private final int httpConnectionTimeout;
     private final int httpReadTimeout;
     private final int httpConnectionRequestTimeout;
@@ -80,6 +82,9 @@ public class WebSubAdapterConfiguration {
                     .orElseThrow(() -> handleClientException(ENCRYPTION_KEY_ENDPOINT_URL_NOT_CONFIGURED));
         }
 
+        this.connectionHandshakeTimeout =
+                configurationProvider.getProperty(CONNECTION_HANDSHAKE_TIMEOUT).map(Integer::parseInt).orElse(
+                        WebSubHubAdapterConstants.DEFAULT_HANDSHAKE_TIMEOUT);
         this.httpConnectionTimeout =
                 configurationProvider.getProperty(HTTP_CONNECTION_TIMEOUT).map(Integer::parseInt).orElse(
                         WebSubHubAdapterConstants.DEFAULT_HTTP_CONNECTION_TIMEOUT);
@@ -128,6 +133,16 @@ public class WebSubAdapterConfiguration {
     public String getWebSubHubBaseUrl() {
 
         return webSubHubBaseUrl;
+    }
+
+    /**
+     * Returns the HTTP connection handshake timeout.
+     *
+     * @return HTTP connection handshake timeout.
+     */
+    public int getHandshakeTimeout() {
+
+        return connectionHandshakeTimeout;
     }
 
     /**

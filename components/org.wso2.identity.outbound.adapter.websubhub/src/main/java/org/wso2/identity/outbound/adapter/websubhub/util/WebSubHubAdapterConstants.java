@@ -41,6 +41,7 @@ public class WebSubHubAdapterConstants {
     public static final String ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS = "Topic %s could not be deregistered " +
             "as there are active subscribers";
     public static final String CORRELATION_ID_REQUEST_HEADER = "activityid";
+    public static final Integer DEFAULT_HANDSHAKE_TIMEOUT = 1000;
     public static final Integer DEFAULT_HTTP_CONNECTION_TIMEOUT = 300;
     public static final Integer DEFAULT_HTTP_READ_TIMEOUT = 300;
     public static final Integer DEFAULT_HTTP_CONNECTION_REQUEST_TIMEOUT = 300;
