@@ -31,6 +31,7 @@ import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -54,7 +55,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
@@ -208,8 +208,8 @@ public class WebSubHubAdapterUtil {
                 }
 
                 // TODO: Correlation Log for response.
-//                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-//                        RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
+                // handleResponseCorrelationLog(request, requestStartTime, RequestStatus.COMPLETED.getStatus(),
+                //         String.valueOf(responseCode), responsePhrase);
 
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
@@ -228,8 +228,8 @@ public class WebSubHubAdapterUtil {
             public void failed(Exception ex) {
 
                 // TODO: Correlation Log for error.
-//                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-//                        RequestStatus.FAILED.getStatus(), ex.getMessage());
+                // handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus(),
+                //         ex.getMessage());
                 log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
@@ -237,8 +237,7 @@ public class WebSubHubAdapterUtil {
             public void cancelled() {
 
                 // TODO: Correlation Log for error 2.
-//                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime,
-//                        RequestStatus.CANCELLED.getStatus());
+                // handleResponseCorrelationLog(request, requestStartTime, RequestStatus.CANCELLED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });
@@ -263,10 +262,18 @@ public class WebSubHubAdapterUtil {
 
             HttpPost httpPost = new HttpPost(topicMgtUrl);
             httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(httpPost);
+            final long requestStartTime = System.currentTimeMillis();
+
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                int responseCode = response.getStatusLine().getStatusCode();
+                StatusLine statusLine = response.getStatusLine();
+                int responseCode = statusLine.getStatusCode();
+                String responsePhrase = statusLine.getReasonPhrase();
                 if (responseCode == HttpStatus.SC_OK) {
                     HttpEntity entity = response.getEntity();
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
                     if (entity != null) {
                         String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
                         if (RESPONSE_FOR_SUCCESSFUL_OPERATION.equals(responseString)) {
@@ -291,12 +298,16 @@ public class WebSubHubAdapterUtil {
                     // 2. if the topic doesn't exist when de-registering the topic (404).
                     HttpEntity entity = response.getEntity();
                     String responseString = "";
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.FAILED.getStatus(), String.valueOf(responseCode), responsePhrase);
                     if (entity != null) {
                         responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
                     }
                     log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
                             topic, operation, responseString));
                 } else {
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.CANCELLED.getStatus(), String.valueOf(responseCode), responsePhrase);
                     if (responseCode == HttpStatus.SC_FORBIDDEN) {
                         Map<String, String> hubResponse = parseEventHubResponse(response);
                         if (!hubResponse.isEmpty() && hubResponse.containsKey(HUB_REASON)) {
@@ -352,13 +363,18 @@ public class WebSubHubAdapterUtil {
 
     /**
      * Get correlation id from the MDC.
-     * If not then generate a random UUID and return the UUID.
+     * If not then generate a random UUID, add it to MDC and return the UUID.
      *
      * @return Correlation id
      */
     public static String getCorrelationID() {
-
-        return Optional.ofNullable(MDC.get(CORRELATION_ID_MDC)).orElse(UUID.randomUUID().toString());
+        
+        String correlationID = MDC.get(CORRELATION_ID_MDC);
+        if (StringUtils.isBlank(correlationID)) {
+            correlationID = UUID.randomUUID().toString();
+            MDC.put(CORRELATION_ID_MDC, correlationID);
+        }
+        return correlationID;
     }
 
     /**
@@ -436,4 +452,20 @@ public class WebSubHubAdapterUtil {
         return map;
     }
 
+    /**
+     * This method handles the correlation log for responses received by the websubhub.
+     *
+     * @param request          Request sent to the websubhub.
+     * @param requestStartTime Start time of the request.
+     * @param otherParams      Other parameters to be logged.
+     */
+    private static void handleResponseCorrelationLog(HttpPost request, long requestStartTime, String... otherParams) {
+
+        try {
+            MDC.put(CORRELATION_ID_MDC, request.getFirstHeader(CORRELATION_ID_REQUEST_HEADER).getValue());
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(request, requestStartTime, otherParams);
+        } finally {
+            MDC.remove(CORRELATION_ID_MDC);
+        }
+    }
 }

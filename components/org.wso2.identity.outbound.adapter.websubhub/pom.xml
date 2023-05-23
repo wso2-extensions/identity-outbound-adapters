@@ -21,7 +21,7 @@
     <parent>
         <artifactId>identity-outbound-adapters</artifactId>
         <groupId>org.wso2.identity.outbound.adapters</groupId>
-        <version>1.0.16-SNAPSHOT</version>
+        <version>1.0.20-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -145,6 +145,7 @@
                             org.wso2.carbon.identity.event; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.json.simple; version="${com.googlecode.json-simple.wso2.version.range}",
                             javax.net.ssl; version="${javax.net.ssl.version.range}",
+                            org.slf4j; version="${org.slf4j.imp.pkg.version.range}",
                         </Import-Package>
                     </instructions>
                 </configuration>
