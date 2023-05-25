@@ -33,6 +33,7 @@ public class WebSubAdapterConfiguration {
 
     private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
     private static final String ENCRYPTION_ENABLED_CONFIG = "adapter.websubhub.encryptionEnabled";
+    private static final String TOPIC_DELETION_DISABLED_CONFIG = "adapter.websubhub.topicDeletionDisabled";
     private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
     private static final String CONNECTION_HANDSHAKE_TIMEOUT = "adapter.websubhub.connectionHandshakeTimeout";
     private static final String HTTP_CONNECTION_TIMEOUT = "adapter.websubhub.httpConnectionTimeout";
@@ -45,6 +46,7 @@ public class WebSubAdapterConfiguration {
     private static final String ENCRYPTION_KEY_CACHE_LIFESPAN = "adapter.websubhub.encryptionKeyCacheLifespan";
     private final boolean adapterEnabled;
     private final boolean encryptionEnabled;
+    private final boolean topicDeletionDisabled;
     private final int connectionHandshakeTimeout;
     private final int httpConnectionTimeout;
     private final int httpReadTimeout;
@@ -81,6 +83,10 @@ public class WebSubAdapterConfiguration {
             this.encryptionKeyEndpointUrl = configurationProvider.getProperty(ENCRYPTION_KEY_ENDPOINT_URL)
                     .orElseThrow(() -> handleClientException(ENCRYPTION_KEY_ENDPOINT_URL_NOT_CONFIGURED));
         }
+
+        this.topicDeletionDisabled =
+                configurationProvider.getProperty(TOPIC_DELETION_DISABLED_CONFIG).map(Boolean::parseBoolean)
+                        .orElse(false);
 
         this.connectionHandshakeTimeout =
                 configurationProvider.getProperty(CONNECTION_HANDSHAKE_TIMEOUT).map(Integer::parseInt).orElse(
@@ -123,6 +129,16 @@ public class WebSubAdapterConfiguration {
     public boolean isEncryptionEnabled() {
 
         return encryptionEnabled;
+    }
+
+    /**
+     * Getter method to return topic deletion disabled configuration.
+     *
+     * @return whether topic deletion is disabled in the configurations.
+     */
+    public boolean isTopicDeletionDisabled() {
+
+        return topicDeletionDisabled;
     }
 
     /**

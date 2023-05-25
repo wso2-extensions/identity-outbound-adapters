@@ -251,6 +251,13 @@ public class WebSubHubAdapterUtil {
     public static void makeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation)
             throws IOException, WebSubAdapterException {
 
+        // Skip the topic deletion call to the hub, when the topic deletion is disabled.
+        if (operation.equals(DEREGISTER) && WebSubHubAdapterDataHolder.getInstance()
+                .getAdapterConfiguration().isTopicDeletionDisabled()) {
+            log.info("Skipping the topic deletion call as the topic deletion is disabled.");
+            return;
+        }
+
         String topicMgtUrl = buildURL(topic, webSubHubBaseUrl, operation);
         CloseableHttpClient httpClient = WebSubHubAdapterDataHolder.getInstance().getClientManager().getSyncClient();
         ClassicHttpRequest httpPost = ClassicRequestBuilder.post(topicMgtUrl)
