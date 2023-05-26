@@ -254,7 +254,7 @@ public class WebSubHubAdapterUtil {
         // Skip the topic deletion call to the hub, when the topic deletion is disabled.
         if (StringUtils.isNotEmpty(operation) && operation.equals(DEREGISTER)
                 && WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().isTopicDeletionDisabled()) {
-            log.info("Skipping the topic deletion call as the topic deletion is disabled.");
+            log.info("Skipping the topic deletion call as the topic deletion is disabled. Topic: " + topic);
             return;
         }
 
