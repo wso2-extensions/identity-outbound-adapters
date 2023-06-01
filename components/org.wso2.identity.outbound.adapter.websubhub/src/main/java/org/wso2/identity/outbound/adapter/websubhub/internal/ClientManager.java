@@ -85,7 +85,10 @@ public class ClientManager {
             throw handleServerException(ERROR_CREATING_ASYNC_HTTP_CLIENT, e);
         }
 
-        LOG.info("Creating HTTP async client manager for WebSub outbound adapter.");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Creating HTTP async client manager for Websubhub outbound adapter.");
+        }
+
         httpAsyncClient = HttpAsyncClients.custom()
                 .setConnectionManager(asyncConnectionManager)
                 .setIOReactorConfig(IOReactorConfig.custom().build())
@@ -95,7 +98,10 @@ public class ClientManager {
         httpAsyncClient.start();
 
         // Create the http client.
-        LOG.info("Creating HTTP client manager for WebSub outbound adapter.");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Creating HTTP client manager for Websubhub outbound adapter.");
+        }
+
         httpClient = HttpClients.custom()
                 .setConnectionManager(createPoolingConnectionManager())
                 .setDefaultRequestConfig(RequestConfig.custom().build())
@@ -178,7 +184,9 @@ public class ClientManager {
     private SSLContext getSSLContext() throws WebSubAdapterServerException {
 
         if (sslContext == null) {
-            LOG.info("Creating SSL context for WebSub outbound adapter.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Creating SSL context for WebSub outbound adapter.");
+            }
             try {
                 sslContext = SSLContexts.custom()
                         .loadKeyMaterial(WebSubHubAdapterDataHolder.getInstance().getKeyStore(),

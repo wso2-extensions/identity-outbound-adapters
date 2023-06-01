@@ -206,8 +206,8 @@ public class WebSubHubAdapterUtil {
                     log.debug("WebSubHub request completed. Response code: " + responseCode);
                 }
 
-                 handleResponseCorrelationLog(request, requestStartTime, RequestStatus.COMPLETED.getStatus(),
-                         String.valueOf(responseCode), responsePhrase);
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.COMPLETED.getStatus(),
+                        String.valueOf(responseCode), responsePhrase);
 
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
@@ -218,22 +218,22 @@ public class WebSubHubAdapterUtil {
                 } else {
                     log.error("WebHubSub event publisher received " + responseCode + " code.");
                     String responseBody = response.getBodyText();
-                    log.debug("Response data: " + responseBody);
+                    log.error("Response data: " + responseBody);
                 }
             }
 
             @Override
             public void failed(Exception ex) {
 
-                 handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus(),
-                         ex.getMessage());
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus(),
+                        ex.getMessage());
                 log.error("Publishing event data to WebSubHub failed. ", ex);
             }
 
             @Override
             public void cancelled() {
 
-                 handleResponseCorrelationLog(request, requestStartTime, RequestStatus.CANCELLED.getStatus());
+                handleResponseCorrelationLog(request, requestStartTime, RequestStatus.CANCELLED.getStatus());
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });
