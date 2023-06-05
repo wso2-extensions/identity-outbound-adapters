@@ -33,7 +33,9 @@ public class WebSubAdapterConfiguration {
 
     private static final String ADAPTER_ENABLED_CONFIG = "adapter.websubhub.enabled";
     private static final String ENCRYPTION_ENABLED_CONFIG = "adapter.websubhub.encryptionEnabled";
+    private static final String TOPIC_DELETION_DISABLED_CONFIG = "adapter.websubhub.topicDeletionDisabled";
     private static final String ADAPTER_HUB_URL_CONFIG = "adapter.websubhub.baseUrl";
+    private static final String CONNECTION_HANDSHAKE_TIMEOUT = "adapter.websubhub.connectionHandshakeTimeout";
     private static final String HTTP_CONNECTION_TIMEOUT = "adapter.websubhub.httpConnectionTimeout";
     private static final String HTTP_READ_TIMEOUT = "adapter.websubhub.httpReadTimeout";
     private static final String HTTP_CONNECTION_REQUEST_TIMEOUT = "adapter.websubhub.httpConnectionRequestTimeout";
@@ -44,6 +46,8 @@ public class WebSubAdapterConfiguration {
     private static final String ENCRYPTION_KEY_CACHE_LIFESPAN = "adapter.websubhub.encryptionKeyCacheLifespan";
     private final boolean adapterEnabled;
     private final boolean encryptionEnabled;
+    private final boolean topicDeletionDisabled;
+    private final int connectionHandshakeTimeout;
     private final int httpConnectionTimeout;
     private final int httpReadTimeout;
     private final int httpConnectionRequestTimeout;
@@ -80,6 +84,13 @@ public class WebSubAdapterConfiguration {
                     .orElseThrow(() -> handleClientException(ENCRYPTION_KEY_ENDPOINT_URL_NOT_CONFIGURED));
         }
 
+        this.topicDeletionDisabled =
+                configurationProvider.getProperty(TOPIC_DELETION_DISABLED_CONFIG).map(Boolean::parseBoolean)
+                        .orElse(false);
+
+        this.connectionHandshakeTimeout =
+                configurationProvider.getProperty(CONNECTION_HANDSHAKE_TIMEOUT).map(Integer::parseInt).orElse(
+                        WebSubHubAdapterConstants.DEFAULT_HANDSHAKE_TIMEOUT);
         this.httpConnectionTimeout =
                 configurationProvider.getProperty(HTTP_CONNECTION_TIMEOUT).map(Integer::parseInt).orElse(
                         WebSubHubAdapterConstants.DEFAULT_HTTP_CONNECTION_TIMEOUT);
@@ -121,6 +132,16 @@ public class WebSubAdapterConfiguration {
     }
 
     /**
+     * Getter method to return topic deletion disabled configuration.
+     *
+     * @return whether topic deletion is disabled in the configurations.
+     */
+    public boolean isTopicDeletionDisabled() {
+
+        return topicDeletionDisabled;
+    }
+
+    /**
      * Returns the base URL of the WebSub Hub.
      *
      * @return base URL of the WebSub Hub.
@@ -128,6 +149,16 @@ public class WebSubAdapterConfiguration {
     public String getWebSubHubBaseUrl() {
 
         return webSubHubBaseUrl;
+    }
+
+    /**
+     * Returns the HTTP connection handshake timeout.
+     *
+     * @return HTTP connection handshake timeout.
+     */
+    public int getHandshakeTimeout() {
+
+        return connectionHandshakeTimeout;
     }
 
     /**

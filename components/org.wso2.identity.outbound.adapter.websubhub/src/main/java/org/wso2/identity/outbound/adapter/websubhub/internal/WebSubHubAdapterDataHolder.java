@@ -31,6 +31,8 @@ public class WebSubHubAdapterDataHolder {
     private static final WebSubHubAdapterDataHolder instance = new WebSubHubAdapterDataHolder();
     private ClientManager clientManager;
     private KeyStore trustStore;
+    private KeyStore keyStore;
+    private String keyStorePassword;
     private WebSubAdapterConfiguration adapterConfiguration;
     private DefaultResourceRetriever resourceRetriever;
 
@@ -61,6 +63,26 @@ public class WebSubHubAdapterDataHolder {
     public void setTrustStore(KeyStore trustStore) {
 
         this.trustStore = trustStore;
+    }
+
+    public KeyStore getKeyStore() {
+
+        return keyStore;
+    }
+
+    public void setKeyStore(KeyStore keyStore) {
+
+        this.keyStore = keyStore;
+    }
+
+    public String getKeyStorePassword() {
+
+        return keyStorePassword;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+
+        this.keyStorePassword = keyStorePassword;
     }
 
     public WebSubAdapterConfiguration getAdapterConfiguration() {

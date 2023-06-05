@@ -25,6 +25,8 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.core.util.KeyStoreManager;
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 import org.wso2.identity.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
@@ -49,8 +51,15 @@ public class WebSubHubAdapterServiceComponent {
                     webSubHubEventAdapter, null);
             WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
                     OutboundAdapterConfigurationProvider.getInstance()));
+
+            KeyStoreManager keyStoreMan = KeyStoreManager.getInstance(
+                    MultitenantConstants.SUPER_TENANT_ID);
+            WebSubHubAdapterDataHolder.getInstance().setKeyStore(keyStoreMan.getPrimaryKeyStore());
+            WebSubHubAdapterDataHolder.getInstance().setKeyStorePassword(keyStoreMan.getPrimaryPrivateKeyPasssword());
+
             WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
             WebSubHubAdapterDataHolder.getInstance().setResourceRetriever(new DefaultResourceRetriever());
+
             if (log.isDebugEnabled()) {
                 log.debug("Successfully activated the WebSub Hub adapter service.");
             }
