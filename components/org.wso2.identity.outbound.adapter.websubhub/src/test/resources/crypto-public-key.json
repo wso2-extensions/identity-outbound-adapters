@@ -1,0 +1,9 @@
+{
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1igp0YQIFKQnOBWXcz6r1wt+2/igM3eXafddQA3wAuB6veD3XytJ72DrFOavE5Exj8WsyB54/VoEw8mKCvCw0ve21jr5oK5ajT0cviuafkMU395/ytD2vHBBbvXax4BXLNRFh5sGAA4Sh2dzwgCtX4NMWyh4fk/ouyIbKlvKRKAza35BQmHyOvSXMlkOEM7gmDJHrQJMCVDOBOT3OHyFQxZfv1Et9KDVqUo5SYEA+jf6IHn1FwsoIE8AmdeuKK3LYWC3Qw9OAC2KnelStt77pWP2YgbMsuapaG9WOZog5Ku0RLFDPk25Rv+dIb6mh90HVp/vR1+x7mMBJqeq85A7UQIDAQAB",
+  "type": "encryptionKey",
+  "status": "active",
+  "createdAt": "2023-01-22T05:12:29.831315Z",
+  "expiry": "2024-01-22T05:12:29.833259Z",
+  "algo": "RSA",
+  "size": "2048"
+}

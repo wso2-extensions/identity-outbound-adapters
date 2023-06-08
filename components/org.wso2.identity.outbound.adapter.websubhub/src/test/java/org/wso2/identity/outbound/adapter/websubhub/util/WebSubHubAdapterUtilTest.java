@@ -18,14 +18,23 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.util;
 
+import com.nimbusds.jose.util.DefaultResourceRetriever;
+import com.nimbusds.jose.util.Resource;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.slf4j.MDC;
@@ -34,6 +43,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
@@ -43,7 +53,13 @@ import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDat
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 
@@ -68,6 +84,12 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_PARAM_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_SEPARATOR;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_URI;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_HUB_BASE_URL;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
 
 /**
  * Unit tests for {@link WebSubHubAdapterUtil}.
@@ -78,10 +100,14 @@ public class WebSubHubAdapterUtilTest {
     private static final String TEST_EVENT = "urn:ietf:params:testEvent";
     private static final String TEST_TOPIC = "TEST-TOPIC";
     private static final String TEST_ORG_NAME = "test-org";
+    private static final String TEST_TENANT = "test-tenant";
     private static final String TEST_PROPERTY = "test-property";
     private static final int TEST_ORG_ID = 999;
     private static final String INVALID_RESPONSE = "INVALID_RESPONSE";
     private static final String HUB_MODE_DENIED = HUB_MODE + "=" + "denied";
+    private static final String SAMPLE_CRYPTO_KEY_ENDPOINT_URL = "http://mockedUrl/${tenant_domain}";
+    private static final String JSON_CONTENT_TYPE = "application/json";
+    private static final String PUBLIC_KEY_FILE_PATH = "src/test/resources/crypto-public-key.json";
 
     private AutoCloseable autoCloseable;
     @Mock
@@ -92,9 +118,14 @@ public class WebSubHubAdapterUtilTest {
     private ClientManager clientManagerMock;
     @Mock
     private CloseableHttpClient closeableHttpClientMock;
+    @Mock
+    private CloseableHttpAsyncClient closeableHttpAsyncClientMock;
+    @Mock
+    private DefaultResourceRetriever resourceRetrieverMock;
 
     private MockedStatic<HttpClientBuilder> mockStaticHttpClientBuilder;
     private MockedStatic<WebSubHubAdapterDataHolder> mockStaticWebSubHubAdapterDataHolder;
+    private MockedStatic<EventPayloadCryptographyUtils> mockStaticEventPayloadCryptographyUtils;
 
     private enum ResponseStatus {
 
@@ -110,10 +141,13 @@ public class WebSubHubAdapterUtilTest {
         mockStaticWebSubHubAdapterDataHolder = mockStatic(WebSubHubAdapterDataHolder.class);
         mockStaticWebSubHubAdapterDataHolder.when(WebSubHubAdapterDataHolder::getInstance)
                 .thenReturn(webSubHubAdapterDataHolderMock);
+        mockStaticEventPayloadCryptographyUtils = mockStatic(EventPayloadCryptographyUtils.class);
         when(clientManagerMock.getSyncClient()).thenReturn(closeableHttpClientMock);
+        when(clientManagerMock.getClient()).thenReturn(closeableHttpAsyncClientMock);
         when(webSubHubAdapterDataHolderMock.getClientManager()).thenReturn(clientManagerMock);
         when(webSubHubAdapterDataHolderMock.getAdapterConfiguration()).thenReturn(webSubAdapterConfigurationMock);
         when(webSubAdapterConfigurationMock.isTopicDeletionDisabled()).thenReturn(false);
+        when(webSubHubAdapterDataHolderMock.getResourceRetriever()).thenReturn(resourceRetrieverMock);
     }
 
     @AfterClass
@@ -136,6 +170,22 @@ public class WebSubHubAdapterUtilTest {
         testEvenPayload.setOrganizationName(orgName);
         testEvenPayload.setRef(ref);
         return testEvenPayload;
+    }
+
+    /**
+     * Read and return encryption public key response from resource file.
+     *
+     * @return JSONObject containing a mocked public key API response.
+     * @throws IOException      If an error occurs while reading the file.
+     * @throws ParseException   If an error occurs while parsing.
+     */
+    private static JSONObject getCryptoPublicKey() throws IOException, ParseException {
+
+        String resourceFilePath = new File(PUBLIC_KEY_FILE_PATH).getAbsolutePath();
+        JSONParser jsonParser = new JSONParser();
+        JSONObject keyResponseJSON = (JSONObject) jsonParser.parse(new InputStreamReader(
+                Files.newInputStream(Paths.get(resourceFilePath)), StandardCharsets.UTF_8));
+        return keyResponseJSON;
     }
 
     @DataProvider(name = "securityEventDataProvider")
@@ -329,9 +379,130 @@ public class WebSubHubAdapterUtilTest {
         }
     }
 
-    /**
-     * Test event payload implementation extended from {@link EventPayload}.
-     */
+    @DataProvider(name = "makeAsyncAPICallInvalidParameterDataProvider")
+    public Object[][] makeAsyncAPICallInvalidParameterDataProvider() {
+
+        return new Object[][]{
+                // topic, web sub hub baseUrl, orgId, orgName, eventUri, testProperty, expectedException, expectedError
+                {null, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, TEST_PROPERTY,
+                        WebSubAdapterClientException.class, ERROR_INVALID_EVENT_TOPIC},
+                {TEST_TOPIC, null, TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, TEST_PROPERTY,
+                        WebSubAdapterClientException.class, ERROR_INVALID_WEB_SUB_HUB_BASE_URL},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, null, TEST_EVENT, TEST_PROPERTY,
+                        WebSubAdapterClientException.class, ERROR_INVALID_EVENT_ORGANIZATION_NAME},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, TEST_ORG_NAME, null, TEST_PROPERTY,
+                        WebSubAdapterClientException.class, ERROR_INVALID_EVENT_URI},
+                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, null,
+                        WebSubAdapterClientException.class, ERROR_NULL_EVENT_PAYLOAD},
+        };
+    }
+
+    @Test(dataProvider = "makeAsyncAPICallInvalidParameterDataProvider")
+    public void testMakeAsyncAPICallHandleInvalidParameters(String topic, String webSubHubBaseUrl,
+                                                            int orgId, String orgName, String eventUri,
+                                                            String testProperty, Class<?> expectedException,
+                                                            WebSubHubAdapterConstants.ErrorMessages error) {
+
+        String ref = "https://localhost:9443/" + orgName + "/test-event";
+
+        EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
+
+        try {
+            SecurityEventTokenPayload securityEventTokenPayload =
+                    WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
+
+            WebSubHubAdapterUtil.makeAsyncAPICall(securityEventTokenPayload, TEST_TENANT, topic, webSubHubBaseUrl);
+
+            Assert.fail("Expected an exception of type: " + expectedException.getName());
+
+        } catch (WebSubAdapterException e) {
+            Assert.assertSame(e.getClass(), expectedException);
+            Assert.assertEquals(e.getErrorCode(), error.getCode());
+        }
+
+    }
+
+    @DataProvider(name = "makeAsyncAPICallValidParameterDataProvider")
+    public Object[][] makeAsyncAPICallValidParameterDataProvider() {
+
+        return new Object[][]{
+                // isEncryptionEnabled
+                {true},
+                {false}
+        };
+    }
+
+    @Test(dataProvider = "makeAsyncAPICallValidParameterDataProvider")
+    public void testMakeAsyncAPICallHandleValidParameters(Boolean isEncryptionEnabled)
+            throws IOException, ParseException {
+
+        String ref = "https://localhost:9443/" + TEST_ORG_NAME + "/test-event";
+
+        EventPayload testEvenPayload = getEventPayload(TEST_ORG_ID, TEST_ORG_NAME, TEST_PROPERTY, ref);
+
+        try {
+            SecurityEventTokenPayload securityEventTokenPayload =
+                    WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, TEST_EVENT, TEST_TOPIC);
+
+            when(webSubAdapterConfigurationMock.isEncryptionEnabled()).thenReturn(isEncryptionEnabled);
+            when(closeableHttpAsyncClientMock.execute(any(SimpleHttpRequest.class),
+                    any(FutureCallback.class))).thenReturn(null);
+
+            if (isEncryptionEnabled) {
+
+                JSONObject publicKeyJSON = getCryptoPublicKey();
+                when(resourceRetrieverMock.retrieveResource(any(URL.class)))
+                        .thenReturn(new Resource(publicKeyJSON.toString(), JSON_CONTENT_TYPE));
+                when(webSubAdapterConfigurationMock.getEncryptionKeyEndpointUrl())
+                        .thenReturn(SAMPLE_CRYPTO_KEY_ENDPOINT_URL);
+            }
+
+//            ArgumentCaptor<SimpleHttpRequest> httpRequestArgumentCaptor =
+//                    ArgumentCaptor.forClass(SimpleHttpRequest.class);
+//            ArgumentCaptor<FutureCallback<SimpleHttpResponse>> futureCallbackArgumentCaptor =
+//                    ArgumentCaptor.forClass(FutureCallback.class);
+
+            WebSubHubAdapterUtil.makeAsyncAPICall(securityEventTokenPayload, TEST_TENANT,
+                    TEST_TOPIC, WEBSUB_HUB_BASE_URL);
+
+//            verify(closeableHttpAsyncClientMock).execute(httpRequestArgumentCaptor.capture(),
+//                    futureCallbackArgumentCaptor.capture());
+
+
+        } catch (WebSubAdapterException e) {
+            Assert.fail("Received exception: " + e.getClass().getName() + " for a successful test case.");
+        }
+
+    }
+
+    @Test()
+    public void testMakeAsyncAPICallHandlePayloadEncryptionException () {
+
+        String ref = "https://localhost:9443/" + TEST_ORG_NAME + "/test-event";
+
+        EventPayload testEvenPayload = getEventPayload(TEST_ORG_ID, TEST_ORG_NAME, TEST_PROPERTY, ref);
+
+        try {
+            SecurityEventTokenPayload securityEventTokenPayload =
+                    WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, TEST_EVENT, TEST_TOPIC);
+
+            when(webSubAdapterConfigurationMock.isEncryptionEnabled()).thenReturn(true);
+            mockStaticEventPayloadCryptographyUtils
+                    .when(()-> EventPayloadCryptographyUtils.encryptEventPayload(any(), any()))
+                    .thenThrow(new IdentityEventException("Error while encrypting event payload."));
+
+            WebSubHubAdapterUtil.makeAsyncAPICall(securityEventTokenPayload, TEST_TENANT,
+                    TEST_TOPIC, WEBSUB_HUB_BASE_URL);
+
+            Assert.fail("Expected an exception of type: " + WebSubAdapterClientException.class.getName());
+
+        } catch (WebSubAdapterException e) {
+            Assert.assertEquals(e.getErrorCode(), ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD.getCode());
+        }
+    }
+        /**
+         * Test event payload implementation extended from {@link EventPayload}.
+         */
     private static class TestEventPayload extends EventPayload {
 
         private final String testProperty;
