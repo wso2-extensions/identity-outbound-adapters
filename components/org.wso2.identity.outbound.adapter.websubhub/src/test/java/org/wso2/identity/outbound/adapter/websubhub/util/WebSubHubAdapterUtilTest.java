@@ -33,7 +33,6 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -53,26 +52,10 @@ import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDat
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -84,12 +67,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.wso2.carbon.identity.claim.metadata.mgt.util.ClaimMetadataUtils.CORRELATION_ID_MDC;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ASYMMETRIC_ENCRYPTION_ALGORITHM;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CRYPTO_KEY_JSON_KEY;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CRYPTO_KEY_RESPONSE_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.DEREGISTER;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ENCRYPTED_PAYLOAD_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
@@ -99,12 +78,9 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_REASON;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.IV_PARAMETER_SPEC_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PAYLOAD_EVENT_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.REGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM_WITH_MODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_PARAM_SEPARATOR;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_SEPARATOR;
@@ -124,8 +100,6 @@ public class WebSubHubAdapterUtilTest {
     private static final String HUB_MODE_DENIED = HUB_MODE + "=" + "denied";
     private static final String TEST_TENANT = "test-tenant";
     private static final String JSON_CONTENT_TYPE = "application/json";
-    private static final String PUBLIC_KEY_FILE_PATH = "src/test/resources/crypto-public-key.json";
-    private static final String PRIVATE_KEY_FILE_PATH = "src/test/resources/crypto-private-key.json";
     private static final String SAMPLE_CRYPTO_KEY_ENDPOINT_URL = "http://mockedUrl/${tenant_domain}";
 
     private AutoCloseable autoCloseable;
@@ -163,7 +137,7 @@ public class WebSubHubAdapterUtilTest {
         when(webSubHubAdapterDataHolderMock.getResourceRetriever()).thenReturn(resourceRetrieverMock);
         when(webSubAdapterConfigurationMock.isTopicDeletionDisabled()).thenReturn(false);
 
-        org.json.simple.JSONObject publicKeyJSON = getCryptoPublicKey();
+        org.json.simple.JSONObject publicKeyJSON = TestUtils.getCryptoPublicKey();
         when(webSubAdapterConfigurationMock.getEncryptionKeyEndpointUrl())
                 .thenReturn(SAMPLE_CRYPTO_KEY_ENDPOINT_URL);
         when(resourceRetrieverMock.retrieveResource(any(URL.class)))
@@ -468,7 +442,7 @@ public class WebSubHubAdapterUtilTest {
 
             if (isEncryptionEnabled) {
                 requestObj.put(PAYLOAD_EVENT_JSON_KEY,
-                        decryptEventPayload(requestObj.get(PAYLOAD_EVENT_JSON_KEY).toString()));
+                        TestUtils.decryptEventPayload(requestObj.get(PAYLOAD_EVENT_JSON_KEY).toString()));
             }
 
             JSONObject actualEventPayloadJSON = requestObj.getJSONObject(PAYLOAD_EVENT_JSON_KEY)
@@ -486,77 +460,6 @@ public class WebSubHubAdapterUtilTest {
             Assert.fail("Received exception: " + e.getClass().getName() + " for a successful test case.");
         }
 
-    }
-
-    /**
-     * Read and return encryption public key response from resource file.
-     *
-     * @return JSONObject containing a mocked public key API response.
-     * @throws IOException    If an error occurs while reading the file.
-     * @throws ParseException If an error occurs while parsing.
-     */
-    private static org.json.simple.JSONObject getCryptoPublicKey() throws IOException, ParseException {
-
-        String resourceFilePath = new File(PUBLIC_KEY_FILE_PATH).getAbsolutePath();
-        JSONParser jsonParser = new JSONParser();
-        org.json.simple.JSONObject keyResponseJSON = (org.json.simple.JSONObject) jsonParser.parse(
-                new InputStreamReader(Files.newInputStream(Paths.get(resourceFilePath)), StandardCharsets.UTF_8));
-        return keyResponseJSON;
-    }
-
-    /**
-     * Read and return decryption private key response from resource file.
-     *
-     * @return PrivateKey object.
-     * @throws IOException      If an error occurs while reading the file.
-     * @throws ParseException   If an error occurs while parsing.
-     */
-    private static PrivateKey getCryptoPrivateKey() throws IOException, ParseException, NoSuchAlgorithmException,
-            InvalidKeySpecException {
-
-        String resourceFilePath = new File(PRIVATE_KEY_FILE_PATH).getAbsolutePath();
-        JSONParser jsonParser = new JSONParser();
-        org.json.simple.JSONObject keyResponseJSON = (org.json.simple.JSONObject) jsonParser.parse(
-                new InputStreamReader(Files.newInputStream(Paths.get(resourceFilePath)), StandardCharsets.UTF_8));
-        byte[] pkcs8EncodedBytes =
-                Base64.getDecoder().decode(keyResponseJSON.get(CRYPTO_KEY_RESPONSE_JSON_KEY).toString());
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8EncodedBytes);
-        KeyFactory kf = KeyFactory.getInstance(ASYMMETRIC_ENCRYPTION_ALGORITHM);
-        PrivateKey privateKey = kf.generatePrivate(keySpec);
-        return privateKey;
-    }
-
-    /**
-     * Decrypts and constructs the event payload in the proper format.
-     *
-     * @param eventPayloadJSONString  Encrypted event payload string.
-     * @return                        Decrypted event payload.
-     * @throws Exception Error while decrypting and constructing event payload.
-     */
-    private static org.json.simple.JSONObject decryptEventPayload(String eventPayloadJSONString) throws Exception {
-
-        Cipher decryptCipher = Cipher.getInstance(ASYMMETRIC_ENCRYPTION_ALGORITHM);
-        PrivateKey rsaPrivateKey =  getCryptoPrivateKey();
-        decryptCipher.init(Cipher.DECRYPT_MODE, rsaPrivateKey);
-
-        JSONParser jsonParser = new JSONParser();
-        org.json.simple.JSONObject eventPayloadJSON = (org.json.simple.JSONObject) jsonParser.parse(
-                eventPayloadJSONString);
-        byte[] decodedSymmetricKeyBytes =
-                Base64.getDecoder().decode(eventPayloadJSON.get(CRYPTO_KEY_JSON_KEY).toString());
-        byte[] decryptedMessageBytes = decryptCipher.doFinal(decodedSymmetricKeyBytes);
-        SecretKey decryptedSymmetricKey = new SecretKeySpec(
-                decryptedMessageBytes, 0, decryptedMessageBytes.length, SYMMETRIC_ENCRYPTION_ALGORITHM);
-
-        String encryptedEventPayload = eventPayloadJSON.get(ENCRYPTED_PAYLOAD_JSON_KEY).toString();
-        byte[] ivParameterSpec =
-                Base64.getDecoder().decode(eventPayloadJSON.get(IV_PARAMETER_SPEC_JSON_KEY).toString());
-        byte[] dataInBytes = Base64.getDecoder().decode(encryptedEventPayload);
-        Cipher decryptionCipher = Cipher.getInstance(SYMMETRIC_ENCRYPTION_ALGORITHM_WITH_MODE);
-        GCMParameterSpec spec = new GCMParameterSpec(128, ivParameterSpec);
-        decryptionCipher.init(Cipher.DECRYPT_MODE, decryptedSymmetricKey, spec);
-        byte[] decryptedPayloadBytes = decryptionCipher.doFinal(dataInBytes);
-        return (org.json.simple.JSONObject) jsonParser.parse(new String(decryptedPayloadBytes));
     }
 
     /**
