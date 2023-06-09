@@ -159,12 +159,12 @@ public class WebSubHubAdapterUtilTest {
             return null;
         }
 
-        EventPayload testEvenPayload;
-        testEvenPayload = new TestEventPayload(testProperty);
-        testEvenPayload.setOrganizationId(orgId);
-        testEvenPayload.setOrganizationName(orgName);
-        testEvenPayload.setRef(ref);
-        return testEvenPayload;
+        EventPayload testEventPayload;
+        testEventPayload = new TestEventPayload(testProperty);
+        testEventPayload.setOrganizationId(orgId);
+        testEventPayload.setOrganizationName(orgName);
+        testEventPayload.setRef(ref);
+        return testEventPayload;
     }
 
     @DataProvider(name = "securityEventDataProvider")
@@ -182,10 +182,10 @@ public class WebSubHubAdapterUtilTest {
 
         String ref = "https://localhost:9443/" + orgName + "/test-event";
 
-        EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
+        EventPayload testEventPayload = getEventPayload(orgId, orgName, testProperty, ref);
 
         SecurityEventTokenPayload securityEventTokenPayload =
-                WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
+                WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, eventUri, topic);
 
         assertNotNull(securityEventTokenPayload);
         assertEquals(securityEventTokenPayload.getIss(), WebSubHubAdapterConstants.EVENT_ISSUER);
@@ -202,9 +202,7 @@ public class WebSubHubAdapterUtilTest {
         assertTrue(eventPayload instanceof TestEventPayload,
                 "Event payload should be of type of: " + TestEventPayload.class.getName() + " but found: " +
                         eventPayload.getClass().getName());
-
-        TestEventPayload testEventPayload = (TestEventPayload) eventPayload;
-        Assert.assertEquals(testEventPayload.getTestProperty(), testProperty);
+        Assert.assertEquals(((TestEventPayload) eventPayload).getTestProperty(), testProperty);
     }
 
     @DataProvider(name = "errorSecurityEventDataProvider")
@@ -384,11 +382,11 @@ public class WebSubHubAdapterUtilTest {
 
         String ref = "https://localhost:9443/" + orgName + "/test-event";
 
-        EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
+        EventPayload testEventPayload = getEventPayload(orgId, orgName, testProperty, ref);
 
         try {
             SecurityEventTokenPayload securityEventTokenPayload =
-                    WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
+                    WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, eventUri, topic);
 
             WebSubHubAdapterUtil.makeAsyncAPICall(securityEventTokenPayload, TEST_TENANT, topic, webSubHubBaseUrl);
 
@@ -416,11 +414,11 @@ public class WebSubHubAdapterUtilTest {
 
         String ref = "https://localhost:9443/" + TEST_ORG_NAME + "/test-event";
 
-        EventPayload testEvenPayload = getEventPayload(TEST_ORG_ID, TEST_ORG_NAME, TEST_PROPERTY, ref);
+        EventPayload testEventPayload = getEventPayload(TEST_ORG_ID, TEST_ORG_NAME, TEST_PROPERTY, ref);
 
         try {
             SecurityEventTokenPayload securityEventTokenPayload =
-                    WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, TEST_EVENT, TEST_TOPIC);
+                    WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, TEST_EVENT, TEST_TOPIC);
 
             when(webSubAdapterConfigurationMock.isEncryptionEnabled()).thenReturn(isEncryptionEnabled);
             CloseableHttpAsyncClient closeableHttpAsyncClientMock = mock(CloseableHttpAsyncClient.class);
@@ -450,11 +448,11 @@ public class WebSubHubAdapterUtilTest {
 
             assertNotNull(actualEventPayloadJSON);
             assertEquals(actualEventPayloadJSON.get("organizationId").toString(),
-                    Integer.toString(testEvenPayload.getOrganizationId()));
-            assertEquals(actualEventPayloadJSON.get("organizationName"), testEvenPayload.getOrganizationName());
-            assertEquals(actualEventPayloadJSON.get("ref"), testEvenPayload.getRef());
+                    Integer.toString(testEventPayload.getOrganizationId()));
+            assertEquals(actualEventPayloadJSON.get("organizationName"), testEventPayload.getOrganizationName());
+            assertEquals(actualEventPayloadJSON.get("ref"), testEventPayload.getRef());
             assertEquals(actualEventPayloadJSON.get("testProperty"),
-                    ((TestEventPayload) testEvenPayload).getTestProperty());
+                    ((TestEventPayload) testEventPayload).getTestProperty());
 
         } catch (WebSubAdapterException e) {
             Assert.fail("Received exception: " + e.getClass().getName() + " for a successful test case.");
