@@ -18,6 +18,7 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.internal;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hc.client5.http.config.ConnectionConfig;
@@ -40,6 +41,8 @@ import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.reactor.IOReactorStatus;
+import org.apache.hc.core5.ssl.PrivateKeyDetails;
+import org.apache.hc.core5.ssl.PrivateKeyStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterServerException;
@@ -49,9 +52,11 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 
 import static java.util.Objects.isNull;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CREATING_ASYNC_HTTP_CLIENT;
@@ -187,10 +192,28 @@ public class ClientManager {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Creating SSL context for WebSub outbound adapter.");
             }
+
+            String sslCertificateAlias = WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                    .getSslCertificateAlias();
+            PrivateKeyStrategy aliasStrategy = null;
+
+            if (StringUtils.isNotBlank(sslCertificateAlias)) {
+                aliasStrategy = new PrivateKeyStrategy() {
+                    @Override
+                    public String chooseAlias(Map<String, PrivateKeyDetails> map, SSLParameters sslParameters) {
+
+                        return sslCertificateAlias;
+                    }
+                };
+            } else {
+                LOG.warn("SSL certificate alias for websubhub client is not configured. Using default alias.");
+            }
+
             try {
                 sslContext = SSLContexts.custom()
                         .loadKeyMaterial(WebSubHubAdapterDataHolder.getInstance().getKeyStore(),
-                                WebSubHubAdapterDataHolder.getInstance().getKeyStorePassword().toCharArray())
+                                WebSubHubAdapterDataHolder.getInstance().getKeyStorePassword().toCharArray(),
+                                aliasStrategy)
                         .loadTrustMaterial(WebSubHubAdapterDataHolder.getInstance().getTrustStore(), null)
                         .build();
             } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException |
