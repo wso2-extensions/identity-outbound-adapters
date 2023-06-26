@@ -25,8 +25,12 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.core.util.KeyStoreManager;
+import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 import org.wso2.identity.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
@@ -75,6 +79,21 @@ public class WebSubHubAdapterServiceComponent {
             log.debug("Successfully de-activated the WebSub Hub adapter service.");
         }
     }
+
+    @Reference(
+            name = "registry.service",
+            service = RegistryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRegistryService"
+    )
+    protected void setRegistryService(RegistryService registryService) {
+        /* Reference RegistryService to guarantee that this component will wait until the registry service
+        is started */
+    }
+
+    protected void unsetRegistryService(RegistryService registryService) {
+        /* Reference RegistryService to guarantee that this component will wait until the registry service
+        is started */
+    }
 }
-
-
