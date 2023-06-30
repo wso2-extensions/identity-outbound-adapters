@@ -44,6 +44,8 @@ public class WebSubAdapterConfiguration {
     private static final String ENCRYPTION_KEY_ENDPOINT_URL = "adapter.websubhub.encryptionKeyEndpointUrl";
     // Value for the encryption key cache lifespan in minutes.
     private static final String ENCRYPTION_KEY_CACHE_LIFESPAN = "adapter.websubhub.encryptionKeyCacheLifespan";
+    private static final String SSL_CERTIFICATE_ALIAS = "adapter.websubhub.sslCertificateAlias";
+
     private final boolean adapterEnabled;
     private final boolean encryptionEnabled;
     private final boolean topicDeletionDisabled;
@@ -56,7 +58,7 @@ public class WebSubAdapterConfiguration {
     private final int encryptionKeyCacheLifespan;
     private String encryptionKeyEndpointUrl;
     private String webSubHubBaseUrl;
-
+    private final String sslCertificateAlias;
 
     /**
      * Initialize the {@link WebSubAdapterConfiguration}.
@@ -87,6 +89,8 @@ public class WebSubAdapterConfiguration {
         this.topicDeletionDisabled =
                 configurationProvider.getProperty(TOPIC_DELETION_DISABLED_CONFIG).map(Boolean::parseBoolean)
                         .orElse(false);
+
+        this.sslCertificateAlias = configurationProvider.getProperty(SSL_CERTIFICATE_ALIAS).orElse(null);
 
         this.connectionHandshakeTimeout =
                 configurationProvider.getProperty(CONNECTION_HANDSHAKE_TIMEOUT).map(Integer::parseInt).orElse(
@@ -229,5 +233,15 @@ public class WebSubAdapterConfiguration {
     public int getEncryptionKeyCacheLifespan() {
 
         return encryptionKeyCacheLifespan;
+    }
+
+    /**
+     * Returns the certificate alias for the SSL handshake.
+     *
+     * @return SSL certificate alias.
+     */
+    public String getSslCertificateAlias() {
+
+        return sslCertificateAlias;
     }
 }
