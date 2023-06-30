@@ -30,8 +30,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.core.util.KeyStoreManager;
-import org.wso2.carbon.identity.application.authentication.framework.ApplicationAuthenticationService;
-import org.wso2.carbon.registry.core.service.RegistryService;
+import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 import org.wso2.identity.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
@@ -82,38 +81,20 @@ public class WebSubHubAdapterServiceComponent {
     }
 
     @Reference(
-            name = "registry.service",
-            service = RegistryService.class,
+            name = "identity.core.init.event.service",
+            service = IdentityCoreInitializedEvent.class,
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetRegistryService"
+            unbind = "unsetIdentityCoreInitializedEventService"
     )
-    protected void setRegistryService(RegistryService registryService) {
-        /* Reference RegistryService to guarantee that this component will wait until the registry service
-        is started */
+    protected void setIdentityCoreInitializedEventService(IdentityCoreInitializedEvent identityCoreInitializedEvent) {
+        /* This is to ensure that this component will start only after the CarbonCoreServiceComponent has
+        been initialized. */
     }
 
-    protected void unsetRegistryService(RegistryService registryService) {
-        /* Reference RegistryService to guarantee that this component will wait until the registry service
-        is started */
-    }
-
-    @Reference(
-            name = "identity.application.authentication.framework",
-            service = ApplicationAuthenticationService.class,
-            cardinality = ReferenceCardinality.MANDATORY,
-            policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetApplicationAuthenticationService"
-    )
-    protected void setApplicationAuthenticationService(
-            ApplicationAuthenticationService applicationAuthenticationService) {
-        /* reference ApplicationAuthenticationService service to guarantee that this component will wait until
-        authentication framework is started */
-    }
-
-    protected void unsetApplicationAuthenticationService(
-            ApplicationAuthenticationService applicationAuthenticationService) {
-        /* reference ApplicationAuthenticationService service to guarantee that this component will wait until
-        authentication framework is started */
+    protected void unsetIdentityCoreInitializedEventService(
+            IdentityCoreInitializedEvent identityCoreInitializedEvent) {
+        /* This is to ensure that this component will start only after the CarbonCoreServiceComponent has
+        been initialized. */
     }
 }
