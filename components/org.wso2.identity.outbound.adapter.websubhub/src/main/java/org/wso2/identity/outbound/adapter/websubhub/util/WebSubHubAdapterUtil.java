@@ -51,6 +51,7 @@ import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayl
 import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,6 +66,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.EVENT_ISSUER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CONNECTION_TIMEOUT;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
@@ -267,11 +269,9 @@ public class WebSubHubAdapterUtil {
         WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(httpPost);
         final long requestStartTime = System.currentTimeMillis();
 
-        ClassicHttpResponse response = httpClient.execute(httpPost);
-        int responseCode = response.getCode();
-        String responsePhrase = response.getReasonPhrase();
-
-        try {
+        try (ClassicHttpResponse response = httpClient.execute(httpPost)) {
+            int responseCode = response.getCode();
+            String responsePhrase = response.getReasonPhrase();
             if (responseCode == HttpStatus.SC_OK) {
                 HttpEntity entity = response.getEntity();
                 WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
@@ -336,6 +336,10 @@ public class WebSubHubAdapterUtil {
             }
         } catch (org.apache.hc.core5.http.ParseException e) {
             throw handleServerException(ERROR_WHILE_PARSING_RESPONSE_FROM_WEBSUB_HUB, e, topic, operation);
+        } catch (SocketTimeoutException e) {
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                    RequestStatus.FAILED.getStatus(), e.getMessage());
+            throw handleServerException(ERROR_CONNECTION_TIMEOUT, e, topic, operation);
         }
     }
 
