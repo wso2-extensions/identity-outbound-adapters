@@ -112,7 +112,9 @@ public class WebSubHubAdapterConstants {
         ERROR_GETTING_SYNC_CLIENT("65010", "Error getting the http client to configure events.",
                                            "Error preparing http sync client to configure events, tenant: %s."),
         ERROR_WHILE_PARSING_RESPONSE_FROM_WEBSUB_HUB("65011", "Error parsing response from WebSub Hub.",
-                "Couldn't parse response received from WebSub Hub, topic: %s, operation: %s.");
+                "Couldn't parse response received from WebSub Hub, topic: %s, operation: %s."),
+        ERROR_CONNECTION_TIMEOUT("65012", "Connection timed out while waiting for the Hub response",
+                "Connection timed out while waiting for the WebSub Hub response, topic: %s, operation: %s.");
 
         private final String code;
         private final String message;
