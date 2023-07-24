@@ -227,10 +227,6 @@ public class ClientManager {
 
     private ConnectionConfig createConnectionConfig() {
 
-        LOG.info("WebSub Hub Socket Timeout: " + WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
-                .getHttpReadTimeout() + "ms");
-        LOG.info("WebSub Hub Connection Timeout: " + WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
-                .getHTTPConnectionTimeout() + "ms");
         return ConnectionConfig.custom()
                 .setSocketTimeout(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
                         .getHttpReadTimeout(), TimeUnit.MILLISECONDS)
