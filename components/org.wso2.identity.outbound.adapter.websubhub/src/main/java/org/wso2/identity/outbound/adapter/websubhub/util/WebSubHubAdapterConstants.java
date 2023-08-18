@@ -114,7 +114,10 @@ public class WebSubHubAdapterConstants {
         ERROR_WHILE_PARSING_RESPONSE_FROM_WEBSUB_HUB("65011", "Error parsing response from WebSub Hub.",
                 "Couldn't parse response received from WebSub Hub, topic: %s, operation: %s."),
         ERROR_CONNECTION_TIMEOUT("65012", "Connection timed out while waiting for the Hub response",
-                "Connection timed out while waiting for the WebSub Hub response, topic: %s, operation: %s.");
+                "Connection timed out while waiting for the WebSub Hub response, topic: %s, operation: %s."),
+
+        ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY("65013", "Unable to retrieve event encryption public key",
+                                         "Unable to retrieve event encryption public key from %s");
 
         private final String code;
         private final String message;

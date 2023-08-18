@@ -60,26 +60,12 @@ import java.util.UUID;
 import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
-import static org.wso2.identity.outbound.adapter.websubhub.util.EventPayloadCryptographyUtils.IO_EXCEPTION_ERROR_CODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.DEREGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.EVENT_ISSUER;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CONNECTION_TIMEOUT;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_URI;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_TOPIC;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_HUB_BASE_URL;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_OPERATION;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_WHILE_PARSING_RESPONSE_FROM_WEBSUB_HUB;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.*;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_REASON;
@@ -187,8 +173,8 @@ public class WebSubHubAdapterUtil {
             requestBuilder.setBody(jsonString, ContentType.APPLICATION_JSON);
         } catch (IOException | IdentityEventException | ParseException e) {
             if(e instanceof IdentityEventException) {
-                if (((IdentityEventException) e).getErrorCode().equals(IO_EXCEPTION_ERROR_CODE)) {
-                    // This exception need not to be passed.
+                if (((IdentityEventException) e).getErrorCode().equals(ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getCode())) {
+                    // Break the flow and this exception need not to be passed and we have logged it at lower layer.
                     return;
                 }
             }

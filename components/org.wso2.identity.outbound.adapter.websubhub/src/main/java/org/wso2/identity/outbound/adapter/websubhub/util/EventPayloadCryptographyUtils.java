@@ -60,7 +60,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.IV_PARAMETER_SPEC_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM_WITH_MODE;
-
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY;
 /**
  * This class contains utility methods for encrypting Event Payloads.
  */
@@ -69,7 +69,6 @@ public class EventPayloadCryptographyUtils {
     private static final Log log = LogFactory.getLog(EventPayloadCryptographyUtils.class);
     private static final ConcurrentMap<String, DefaultJWKSetCache> cacheMap = new ConcurrentHashMap<>();
     private static final KeyGenerator keyGenerator;
-    public static final String IO_EXCEPTION_ERROR_CODE = "IEP-50001";
 
 
     static {
@@ -202,9 +201,9 @@ public class EventPayloadCryptographyUtils {
             URL keyEndpointURL = new URL(keyEndpointURLString);
             return resourceRetriever.retrieveResource(keyEndpointURL);
         } catch (IOException e) {
-            log.error("Unable to retrieve event encryption public key from " + keyEndpointURLString, e);
-            throw new IdentityEventException(IO_EXCEPTION_ERROR_CODE,
-                    "Unable to retrieve event encryption public key from " + keyEndpointURLString);
+            log.error(String.format(ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getDescription(), keyEndpointURLString), e);
+            throw new IdentityEventException(ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getCode(),
+                    ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getMessage());
         }
     }
 }
