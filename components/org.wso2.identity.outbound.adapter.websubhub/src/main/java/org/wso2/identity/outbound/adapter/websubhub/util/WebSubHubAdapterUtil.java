@@ -23,20 +23,20 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
-import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
-import org.apache.hc.client5.http.async.methods.SimpleRequestBuilder;
-import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.core5.concurrent.FutureCallback;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -51,14 +51,13 @@ import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayl
 import org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubCorrelationLogUtils.RequestStatus;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.HttpHeaders.ACCEPT;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
@@ -66,7 +65,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.EVENT_ISSUER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_CONNECTION_TIMEOUT;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
@@ -77,7 +75,6 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_WHILE_PARSING_RESPONSE_FROM_WEBSUB_HUB;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
@@ -166,10 +163,10 @@ public class WebSubHubAdapterUtil {
 
         String url = buildURL(topic, webSubHubBaseUrl, PUBLISH);
 
-        SimpleRequestBuilder requestBuilder = SimpleRequestBuilder.post(url)
-                .setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType())
-                .setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType())
-                .setHeader(CORRELATION_ID_REQUEST_HEADER, getCorrelationID());
+        HttpPost request = new HttpPost(url);
+        request.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
+        request.setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+        request.setHeader(CORRELATION_ID_REQUEST_HEADER, getCorrelationID());
 
         ObjectMapper mapper = new ObjectMapper();
         String jsonString;
@@ -183,7 +180,7 @@ public class WebSubHubAdapterUtil {
                         payloadJSON.get(PAYLOAD_EVENT_JSON_KEY).toString(), tenantDomain));
                 jsonString = payloadJSON.toString();
             }
-            requestBuilder.setBody(jsonString, ContentType.APPLICATION_JSON);
+            request.setEntity(new StringEntity(jsonString));
         } catch (IOException | IdentityEventException | ParseException e) {
             throw handleClientException(ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD);
         }
@@ -194,38 +191,46 @@ public class WebSubHubAdapterUtil {
             log.debug("Publishing event data to WebSubHub. URL: " + url + " tenant domain: " + tenantDomain);
         }
 
-        SimpleHttpRequest request = requestBuilder.build();
-
         WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(request);
         final long requestStartTime = System.currentTimeMillis();
-        client.execute(request, new FutureCallback<SimpleHttpResponse>() {
+        client.execute(request, new FutureCallback<HttpResponse>() {
             @Override
-            public void completed(final SimpleHttpResponse response) {
+            public void completed(final HttpResponse response) {
 
-                int responseCode = response.getCode();
-                String responsePhrase = response.getReasonPhrase();
+                int responseCode = response.getStatusLine().getStatusCode();
+                String responsePhrase = response.getStatusLine().getReasonPhrase();
                 if (log.isDebugEnabled()) {
                     log.debug("WebSubHub request completed. Response code: " + responseCode);
                 }
-
                 handleResponseCorrelationLog(request, requestStartTime, RequestStatus.COMPLETED.getStatus(),
                         String.valueOf(responseCode), responsePhrase);
+
 
                 if (responseCode == 200 || responseCode == 201 || responseCode == 202 || responseCode == 204) {
                     // Check for 200 success code range.
                     if (log.isDebugEnabled()) {
-                        String responseBody = response.getBodyText();
-                        log.debug("Response data: " + responseBody);
+                        String responseBody;
+                        try {
+                            responseBody = EntityUtils.toString(response.getEntity());
+                            log.debug("Response data: " + responseBody);
+                        } catch (IOException e) {
+                            log.debug("Error while reading WebSubHub event publisher response. ", e);
+                        }
                     }
                 } else {
                     log.error("WebHubSub event publisher received " + responseCode + " code.");
-                    String responseBody = response.getBodyText();
-                    log.error("Response data: " + responseBody);
+                    String errorResponseBody;
+                    try {
+                        errorResponseBody = EntityUtils.toString(response.getEntity());
+                        log.error("Response data: " + errorResponseBody);
+                    } catch (IOException e) {
+                        log.error("Error while reading WebSubHub event publisher response. ", e);
+                    }
                 }
             }
 
             @Override
-            public void failed(Exception ex) {
+            public void failed(final Exception ex) {
 
                 handleResponseCorrelationLog(request, requestStartTime, RequestStatus.FAILED.getStatus(),
                         ex.getMessage());
@@ -239,6 +244,7 @@ public class WebSubHubAdapterUtil {
                 log.error("Publishing event data to WebSubHub cancelled.");
             }
         });
+
     }
 
     /**
@@ -253,93 +259,83 @@ public class WebSubHubAdapterUtil {
     public static void makeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation)
             throws IOException, WebSubAdapterException {
 
-        // Skip the topic deletion call to the hub, when the topic deletion is disabled.
-        if (StringUtils.isNotEmpty(operation) && operation.equals(DEREGISTER)
-                && WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration().isTopicDeletionDisabled()) {
-            log.info("Skipping the topic deletion call as the topic deletion is disabled. Topic: " + topic);
-            return;
-        }
-
         String topicMgtUrl = buildURL(topic, webSubHubBaseUrl, operation);
-        CloseableHttpClient httpClient = WebSubHubAdapterDataHolder.getInstance().getClientManager().getSyncClient();
-        ClassicHttpRequest httpPost = ClassicRequestBuilder.post(topicMgtUrl)
-                .setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType())
-                .build();
 
-        WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(httpPost);
-        final long requestStartTime = System.currentTimeMillis();
+        try (CloseableHttpClient httpClient = HttpClientBuilder.create().useSystemProperties().build()) {
 
-        try (ClassicHttpResponse response = httpClient.execute(httpPost)) {
-            int responseCode = response.getCode();
-            String responsePhrase = response.getReasonPhrase();
-            if (responseCode == HttpStatus.SC_OK) {
-                HttpEntity entity = response.getEntity();
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
-                        RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
-                if (entity != null) {
-                    String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-                    if (RESPONSE_FOR_SUCCESSFUL_OPERATION.equals(responseString)) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic);
+            HttpPost httpPost = new HttpPost(topicMgtUrl);
+            httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+
+            WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(httpPost);
+            final long requestStartTime = System.currentTimeMillis();
+
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                StatusLine statusLine = response.getStatusLine();
+                int responseCode = statusLine.getStatusCode();
+                String responsePhrase = statusLine.getReasonPhrase();
+                if (responseCode == HttpStatus.SC_OK) {
+                    HttpEntity entity = response.getEntity();
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.COMPLETED.getStatus(), String.valueOf(responseCode), responsePhrase);
+                    if (entity != null) {
+                        String responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                        if (RESPONSE_FOR_SUCCESSFUL_OPERATION.equals(responseString)) {
+                            if (log.isDebugEnabled()) {
+                                log.debug("Success WebSub Hub operation: " + operation + ", topic: " + topic);
+                            }
+                        } else {
+                            throw handleServerException(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB, null, topic,
+                                    operation, responseString);
                         }
                     } else {
-                        throw handleServerException(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB, null, topic,
-                                operation, responseString);
+                        String message =
+                                String.format(ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getDescription(), topic, operation);
+                        throw handleServerException(message, ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getCode());
                     }
+                } else if ((responseCode == HttpStatus.SC_CONFLICT && operation.equals(REGISTER)) ||
+                        (responseCode == HttpStatus.SC_NOT_FOUND && operation.equals(DEREGISTER))) {
+                    // Since the endpoint responds with http status code 409 for registration or 404 for
+                    // de-registration, adapter accepts the response as a success and log it as a warning.
+                    // In current implementation this only happens,
+                    // 1. if the topic exists when registering the topic (409).
+                    // 2. if the topic doesn't exist when de-registering the topic (404).
+                    HttpEntity entity = response.getEntity();
+                    String responseString = "";
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.FAILED.getStatus(), String.valueOf(responseCode), responsePhrase);
+                    if (entity != null) {
+                        responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                    }
+                    log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
+                            topic, operation, responseString));
                 } else {
-                    String message =
-                            String.format(ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getDescription(), topic, operation);
-                    throw handleServerException(message, ERROR_EMPTY_RESPONSE_FROM_WEBSUB_HUB.getCode());
-                }
-            } else if ((responseCode == HttpStatus.SC_CONFLICT && operation.equals(REGISTER)) ||
-                    (responseCode == HttpStatus.SC_NOT_FOUND && operation.equals(DEREGISTER))) {
-                // Since the endpoint responds with http status code 409 for registration or 404 for
-                // de-registration, adapter accepts the response as a success and log it as a warning.
-                // In current implementation this only happens,
-                // 1. if the topic exists when registering the topic (409).
-                // 2. if the topic doesn't exist when de-registering the topic (404).
-
-                HttpEntity entity = response.getEntity();
-                String responseString = "";
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
-                        RequestStatus.FAILED.getStatus(), String.valueOf(responseCode), responsePhrase);
-                if (entity != null) {
-                    responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-                }
-                log.warn(String.format(ERROR_INVALID_RESPONSE_FROM_WEBSUB_HUB.getDescription(),
-                        topic, operation, responseString));
-            } else {
-                WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
-                        RequestStatus.CANCELLED.getStatus(), String.valueOf(responseCode), responsePhrase);
-                if (responseCode == HttpStatus.SC_FORBIDDEN) {
-                    Map<String, String> hubResponse = parseEventHubResponse(response);
-                    if (!hubResponse.isEmpty() && hubResponse.containsKey(HUB_REASON)) {
-                        String errorMsg = String.format(ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS, topic);
-                        // If topic de-registration failed due to active subscriptions, throw a client exception.
-                        if (errorMsg.equals(hubResponse.get(HUB_REASON))) {
-                            log.info(String.format(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS.getDescription(),
-                                    topic, hubResponse.get(HUB_ACTIVE_SUBS)));
-                            throw handleClientException(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS, topic,
-                                    hubResponse.get(HUB_ACTIVE_SUBS));
+                    WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
+                            RequestStatus.CANCELLED.getStatus(), String.valueOf(responseCode), responsePhrase);
+                    if (responseCode == HttpStatus.SC_FORBIDDEN) {
+                        Map<String, String> hubResponse = parseEventHubResponse(response);
+                        if (!hubResponse.isEmpty() && hubResponse.containsKey(HUB_REASON)) {
+                            String errorMsg = String.format(ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS, topic);
+                            // If topic de-registration failed due to active subscriptions, throw a client exception.
+                            if (errorMsg.equals(hubResponse.get(HUB_REASON))) {
+                                log.info(String.format(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS.getDescription(),
+                                        topic, hubResponse.get(HUB_ACTIVE_SUBS)));
+                                throw handleClientException(TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS, topic,
+                                        hubResponse.get(HUB_ACTIVE_SUBS));
+                            }
                         }
                     }
+                    HttpEntity entity = response.getEntity();
+                    String responseString = "";
+                    if (entity != null) {
+                        responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                    }
+                    String message =
+                            String.format(ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getDescription(), topic, operation,
+                                    responseString);
+                    log.error(message + ", Response code:" + responseCode);
+                    throw handleServerException(message, ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getCode());
                 }
-                HttpEntity entity = response.getEntity();
-                String responseString = "";
-                if (entity != null) {
-                    responseString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-                }
-                String message = String.format(ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getDescription(),
-                        topic, operation, responseString);
-                log.error(message + ", Response code:" + responseCode);
-                throw handleServerException(message, ERROR_BACKEND_ERROR_FROM_WEBSUB_HUB.getCode());
             }
-        } catch (org.apache.hc.core5.http.ParseException e) {
-            throw handleServerException(ERROR_WHILE_PARSING_RESPONSE_FROM_WEBSUB_HUB, e, topic, operation);
-        } catch (SocketTimeoutException e) {
-            WebSubHubCorrelationLogUtils.triggerCorrelationLogForResponse(httpPost, requestStartTime,
-                    RequestStatus.FAILED.getStatus(), e.getMessage());
-            throw handleServerException(ERROR_CONNECTION_TIMEOUT, e, topic, operation);
         }
     }
 
@@ -437,38 +433,7 @@ public class WebSubHubAdapterUtil {
      * @return Map of the response content.
      * @throws IOException If an error occurs while parsing the response.
      */
-    @Deprecated
     public static Map<String, String> parseEventHubResponse(CloseableHttpResponse response) throws IOException {
-
-        Map<String, String> map = new HashMap<>();
-        org.apache.http.HttpEntity entity = response.getEntity();
-
-        if (entity != null) {
-            String responseContent = org.apache.http.util.EntityUtils.toString(entity, StandardCharsets.UTF_8);
-            if (log.isDebugEnabled()) {
-                log.debug("Parsing response content from event hub: " + responseContent);
-            }
-            String[] responseParams = responseContent.split(URL_PARAM_SEPARATOR);
-            for (String param : responseParams) {
-                String[] keyValuePair = param.split(URL_KEY_VALUE_SEPARATOR);
-                // keyValuePair should contain key and value.
-                if (keyValuePair.length == 2) {
-                    map.put(keyValuePair[0], keyValuePair[1]);
-                }
-            }
-        }
-        return map;
-    }
-
-    /**
-     * This method parses the urlencoded response from the event hub and returns the contents as a map.
-     *
-     * @param response Response from the event hub.
-     * @return Map of the response content.
-     * @throws IOException If an error occurs while parsing the response.
-     */
-    private static Map<String, String> parseEventHubResponse(ClassicHttpResponse response)
-            throws IOException, org.apache.hc.core5.http.ParseException {
 
         Map<String, String> map = new HashMap<>();
         HttpEntity entity = response.getEntity();
@@ -497,8 +462,7 @@ public class WebSubHubAdapterUtil {
      * @param requestStartTime Start time of the request.
      * @param otherParams      Other parameters to be logged.
      */
-    private static void handleResponseCorrelationLog(SimpleHttpRequest request, long requestStartTime,
-                                                     String... otherParams) {
+    private static void handleResponseCorrelationLog(HttpPost request, long requestStartTime, String... otherParams) {
 
         try {
             MDC.put(CORRELATION_ID_MDC, request.getFirstHeader(CORRELATION_ID_REQUEST_HEADER).getValue());
