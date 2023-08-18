@@ -60,6 +60,7 @@ import java.util.UUID;
 import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils.CORRELATION_ID_MDC;
+import static org.wso2.identity.outbound.adapter.websubhub.util.EventPayloadCryptographyUtils.IO_EXCEPTION_ERROR_CODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CORRELATION_ID_REQUEST_HEADER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.DEREGISTER;
@@ -185,6 +186,12 @@ public class WebSubHubAdapterUtil {
             }
             requestBuilder.setBody(jsonString, ContentType.APPLICATION_JSON);
         } catch (IOException | IdentityEventException | ParseException e) {
+            if(e instanceof IdentityEventException) {
+                if (((IdentityEventException) e).getErrorCode().equals(IO_EXCEPTION_ERROR_CODE)) {
+                    // This exception need not to be passed.
+                    return;
+                }
+            }
             throw handleClientException(ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD);
         }
 

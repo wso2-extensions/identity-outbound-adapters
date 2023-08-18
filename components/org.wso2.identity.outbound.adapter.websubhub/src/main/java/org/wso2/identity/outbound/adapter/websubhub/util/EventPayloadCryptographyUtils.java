@@ -69,6 +69,8 @@ public class EventPayloadCryptographyUtils {
     private static final Log log = LogFactory.getLog(EventPayloadCryptographyUtils.class);
     private static final ConcurrentMap<String, DefaultJWKSetCache> cacheMap = new ConcurrentHashMap<>();
     private static final KeyGenerator keyGenerator;
+    public static final String IO_EXCEPTION_ERROR_CODE = "IEP-50001";
+
 
     static {
         try {
@@ -201,8 +203,8 @@ public class EventPayloadCryptographyUtils {
             return resourceRetriever.retrieveResource(keyEndpointURL);
         } catch (IOException e) {
             log.error("Unable to retrieve event encryption public key from " + keyEndpointURLString, e);
-            throw new IdentityEventException("Unable to retrieve event encryption public key from " +
-                    keyEndpointURLString, e);
+            throw new IdentityEventException(IO_EXCEPTION_ERROR_CODE,
+                    "Unable to retrieve event encryption public key from " + keyEndpointURLString);
         }
     }
 }
