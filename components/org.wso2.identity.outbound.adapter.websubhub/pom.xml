@@ -21,7 +21,7 @@
     <parent>
         <artifactId>identity-outbound-adapters</artifactId>
         <groupId>org.wso2.identity.outbound.adapters</groupId>
-        <version>1.0.26-SNAPSHOT</version>
+        <version>1.0.27-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -46,11 +46,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
-            <artifactId>httpcore5</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
-            <artifactId>httpclient5</artifactId>
+            <artifactId>httpasyncclient</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -106,32 +102,22 @@
                         <Import-Package>
                             org.apache.commons.lang; version="${commons-lang.wso2.osgi.version.range}",
                             org.apache.commons.logging; version="${org.apache.commons.logging.range}",
-
-                            org.apache.http.client.methods; version="${httpclient.wso2.version.range}",
-                            org.apache.hc.client5.http.config; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.impl.async; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.impl.nio; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.impl.classic; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.impl.io; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.nio; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.ssl; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.async.methods; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.io; version="${httpclient5.version.range}",
-                            org.apache.hc.client5.http.socket; version="${httpclient5.version.range}",
-                            org.apache.hc.core5.http; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.http.nio.ssl; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.http.io; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.http.io.entity; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.http.io.support; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.http2; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.pool; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.reactor; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.concurrent; version="${httpcore5.version.range}",
-                            org.apache.hc.core5.ssl; version="${httpcore5.version.range}",
-
+                            org.apache.http; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.nio.conn; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.nio.reactor; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.nio.client; version="${httpasyncclient.version.range}",
+                            org.apache.http.impl.client; version="${httpasyncclient.version.range}",
+                            org.apache.http.nio.conn; version="${httpasyncclient.version.range}",
+                            org.apache.http.nio.reactor; version="${httpasyncclient.version.range}",
+                            org.apache.http.concurrent; version="${httpasyncclient.version.range}",
+                            org.apache.http.client.methods; version="${httpasyncclient.version.range}",
+                            org.apache.http.entity; version="${httpasyncclient.version.range}",
+                            org.apache.http.client.config; version="${httpasyncclient.version.range}",
+                            org.apache.http.conn.ssl; version="${httpasyncclient.version.range}",
+                            org.apache.http.util; version="${httpasyncclient.version.range}",
+                            org.apache.http.ssl; version="${httpasyncclient.version.range}",
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component; version="${osgi.service.component.imp.pkg.version.range}",
-                            org.wso2.carbon.core.util; version="${carbon.kernel.package.import.version.range}",
                             org.wso2.carbon.identity.application.authentication.framework.exception;
                             version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.core.util;
@@ -144,7 +130,6 @@
                             com.nimbusds.jose.*; version="${nimbusds.osgi.version.range}",
                             org.wso2.carbon.identity.event; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.json.simple; version="${com.googlecode.json-simple.wso2.version.range}",
-                            javax.net.ssl; version="${javax.net.ssl.version.range}",
                             org.slf4j; version="${org.slf4j.imp.pkg.version.range}",
                         </Import-Package>
                     </instructions>

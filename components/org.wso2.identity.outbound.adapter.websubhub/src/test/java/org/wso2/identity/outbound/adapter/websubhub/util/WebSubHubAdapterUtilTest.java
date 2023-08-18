@@ -18,24 +18,12 @@
 
 package org.wso2.identity.outbound.adapter.websubhub.util;
 
-import com.nimbusds.jose.util.DefaultResourceRetriever;
-import com.nimbusds.jose.util.Resource;
-import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
-import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
-import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.core5.concurrent.FutureCallback;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.json.JSONObject;
-import org.json.simple.parser.ParseException;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.mockito.MockedStatic;
 import org.slf4j.MDC;
 import org.testng.Assert;
@@ -43,26 +31,24 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterServerException;
-import org.wso2.identity.outbound.adapter.websubhub.internal.ClientManager;
-import org.wso2.identity.outbound.adapter.websubhub.internal.WebSubHubAdapterDataHolder;
 import org.wso2.identity.outbound.adapter.websubhub.model.EventPayload;
 import org.wso2.identity.outbound.adapter.websubhub.model.SecurityEventTokenPayload;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -70,15 +56,9 @@ import static org.wso2.carbon.identity.claim.metadata.mgt.util.ClaimMetadataUtil
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.AUDIENCE_BASE_URL;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.DEREGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_ORGANIZATION_NAME;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_TOPIC;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_EVENT_URI;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_HUB_BASE_URL;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_REASON;
-import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.PAYLOAD_EVENT_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.REGISTER;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.RESPONSE_FOR_SUCCESSFUL_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.URL_KEY_VALUE_SEPARATOR;
@@ -98,24 +78,8 @@ public class WebSubHubAdapterUtilTest {
     private static final int TEST_ORG_ID = 999;
     private static final String INVALID_RESPONSE = "INVALID_RESPONSE";
     private static final String HUB_MODE_DENIED = HUB_MODE + "=" + "denied";
-    private static final String TEST_TENANT = "test-tenant";
-    private static final String JSON_CONTENT_TYPE = "application/json";
-    private static final String SAMPLE_CRYPTO_KEY_ENDPOINT_URL = "http://mockedUrl/${tenant_domain}";
-
-    private AutoCloseable autoCloseable;
-    @Mock
-    private WebSubHubAdapterDataHolder webSubHubAdapterDataHolderMock;
-    @Mock
-    private WebSubAdapterConfiguration webSubAdapterConfigurationMock;
-    @Mock
-    private ClientManager clientManagerMock;
-    @Mock
-    private CloseableHttpClient closeableHttpClientMock;
-    @Mock
-    private DefaultResourceRetriever resourceRetrieverMock;
 
     private MockedStatic<HttpClientBuilder> mockStaticHttpClientBuilder;
-    private MockedStatic<WebSubHubAdapterDataHolder> mockStaticWebSubHubAdapterDataHolder;
 
     private enum ResponseStatus {
 
@@ -124,33 +88,15 @@ public class WebSubHubAdapterUtilTest {
     }
 
     @BeforeClass
-    public void setup() throws WebSubAdapterException, IOException, ParseException {
+    public void setup() {
 
-        autoCloseable = openMocks(this);
         mockStaticHttpClientBuilder = mockStatic(HttpClientBuilder.class);
-        mockStaticWebSubHubAdapterDataHolder = mockStatic(WebSubHubAdapterDataHolder.class);
-        mockStaticWebSubHubAdapterDataHolder.when(WebSubHubAdapterDataHolder::getInstance)
-                .thenReturn(webSubHubAdapterDataHolderMock);
-        when(clientManagerMock.getSyncClient()).thenReturn(closeableHttpClientMock);
-        when(webSubHubAdapterDataHolderMock.getClientManager()).thenReturn(clientManagerMock);
-        when(webSubHubAdapterDataHolderMock.getAdapterConfiguration()).thenReturn(webSubAdapterConfigurationMock);
-        when(webSubHubAdapterDataHolderMock.getResourceRetriever()).thenReturn(resourceRetrieverMock);
-        when(webSubAdapterConfigurationMock.isTopicDeletionDisabled()).thenReturn(false);
-
-        org.json.simple.JSONObject publicKeyJSON = TestUtils.getCryptoPublicKey();
-        when(webSubAdapterConfigurationMock.getEncryptionKeyEndpointUrl())
-                .thenReturn(SAMPLE_CRYPTO_KEY_ENDPOINT_URL);
-        when(resourceRetrieverMock.retrieveResource(any(URL.class)))
-                .thenReturn(new Resource(publicKeyJSON.toJSONString(), JSON_CONTENT_TYPE));
-
     }
 
     @AfterClass
-    public void tearDown() throws Exception {
+    public void tearDown() {
 
         mockStaticHttpClientBuilder.close();
-        mockStaticWebSubHubAdapterDataHolder.close();
-        autoCloseable.close();
     }
 
     private static EventPayload getEventPayload(int orgId, String orgName, String testProperty, String ref) {
@@ -159,12 +105,12 @@ public class WebSubHubAdapterUtilTest {
             return null;
         }
 
-        EventPayload testEventPayload;
-        testEventPayload = new TestEventPayload(testProperty);
-        testEventPayload.setOrganizationId(orgId);
-        testEventPayload.setOrganizationName(orgName);
-        testEventPayload.setRef(ref);
-        return testEventPayload;
+        EventPayload testEvenPayload;
+        testEvenPayload = new TestEventPayload(testProperty);
+        testEvenPayload.setOrganizationId(orgId);
+        testEvenPayload.setOrganizationName(orgName);
+        testEvenPayload.setRef(ref);
+        return testEvenPayload;
     }
 
     @DataProvider(name = "securityEventDataProvider")
@@ -182,10 +128,10 @@ public class WebSubHubAdapterUtilTest {
 
         String ref = "https://localhost:9443/" + orgName + "/test-event";
 
-        EventPayload testEventPayload = getEventPayload(orgId, orgName, testProperty, ref);
+        EventPayload testEvenPayload = getEventPayload(orgId, orgName, testProperty, ref);
 
         SecurityEventTokenPayload securityEventTokenPayload =
-                WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, eventUri, topic);
+                WebSubHubAdapterUtil.buildSecurityEventToken(testEvenPayload, eventUri, topic);
 
         assertNotNull(securityEventTokenPayload);
         assertEquals(securityEventTokenPayload.getIss(), WebSubHubAdapterConstants.EVENT_ISSUER);
@@ -202,7 +148,9 @@ public class WebSubHubAdapterUtilTest {
         assertTrue(eventPayload instanceof TestEventPayload,
                 "Event payload should be of type of: " + TestEventPayload.class.getName() + " but found: " +
                         eventPayload.getClass().getName());
-        Assert.assertEquals(((TestEventPayload) eventPayload).getTestProperty(), testProperty);
+
+        TestEventPayload testEventPayload = (TestEventPayload) eventPayload;
+        Assert.assertEquals(testEventPayload.getTestProperty(), testProperty);
     }
 
     @DataProvider(name = "errorSecurityEventDataProvider")
@@ -296,55 +244,67 @@ public class WebSubHubAdapterUtilTest {
     public void testMakeTopicMgtAPICall(String topic, String webSubHubBaseUrl, String operation,
                                         ResponseStatus responseStatus, Class<?> expectedException) throws IOException {
 
-        CloseableHttpResponse closeableHttpResponseMock = mock(CloseableHttpResponse.class);
-        HttpEntity httpEntity;
+        HttpClientBuilder mockHttpClientBuilder = mock(HttpClientBuilder.class);
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+
+        mockStaticHttpClientBuilder.when(HttpClientBuilder::create).thenReturn(mockHttpClientBuilder);
+        when(mockHttpClientBuilder.useSystemProperties()).thenReturn(mockHttpClientBuilder);
+        when(mockHttpClientBuilder.build()).thenReturn(mockHttpClient);
+        when(mockHttpClient.execute(any())).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+
+        if (responseStatus == ResponseStatus.STATUS_NOT_200) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+        } else if (responseStatus == ResponseStatus.REG_CONFLICT) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_CONFLICT);
+        } else if (responseStatus == ResponseStatus.DEREG_NOT_FOUND) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
+        } else {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
+        }
 
         if (responseStatus == ResponseStatus.NULL_ENTITY) {
-            httpEntity = null;
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_OK);
-        } else if (responseStatus == ResponseStatus.STATUS_NOT_200) {
-            httpEntity = new StringEntity("hub.mode=denied", ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_BAD_REQUEST);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("NA");
-        } else if (responseStatus == ResponseStatus.REG_CONFLICT) {
-            httpEntity = new StringEntity("hub.mode=denied", ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_CONFLICT);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("NA");
-        } else if (responseStatus == ResponseStatus.DEREG_NOT_FOUND) {
-            httpEntity = new StringEntity("hub.mode=denied", ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("NA");
-        } else if (responseStatus == ResponseStatus.NON_SUCCESS_OPERATION) {
-            httpEntity = new StringEntity(INVALID_RESPONSE, ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("NA");
-        } else if (responseStatus == ResponseStatus.FORBIDDEN_TOPIC_DEREG_FAILURE) {
+            when(mockResponse.getEntity()).thenReturn(null);
+        } else {
+            when(mockResponse.getEntity()).thenReturn(mockEntity);
+        }
+
+        if (responseStatus == ResponseStatus.NON_SUCCESS_OPERATION) {
+            when(mockEntity.getContent()).thenReturn(
+                    new ByteArrayInputStream(INVALID_RESPONSE.getBytes(StandardCharsets.UTF_8)));
+        } else {
+            when(mockEntity.getContent()).thenReturn(
+                    new ByteArrayInputStream(RESPONSE_FOR_SUCCESSFUL_OPERATION.getBytes(StandardCharsets.UTF_8)));
+        }
+
+        if (responseStatus == ResponseStatus.FORBIDDEN_TOPIC_DEREG_FAILURE) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
             String responseContent = HUB_MODE_DENIED + URL_PARAM_SEPARATOR + HUB_REASON + URL_KEY_VALUE_SEPARATOR +
                     String.format(ERROR_TOPIC_DEREG_FAILURE_ACTIVE_SUBS, TEST_TOPIC) + URL_PARAM_SEPARATOR +
                     HUB_ACTIVE_SUBS + URL_KEY_VALUE_SEPARATOR + "subscriber_1,subscriber_2";
-            httpEntity = new StringEntity(responseContent, ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("NA");
-        } else if (responseStatus == ResponseStatus.FORBIDDEN) {
-            httpEntity = new StringEntity(HUB_MODE_DENIED, ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("NA");
-        } else {
-            httpEntity = new StringEntity(RESPONSE_FOR_SUCCESSFUL_OPERATION, ContentType.APPLICATION_JSON);
-            when(closeableHttpResponseMock.getCode()).thenReturn(HttpStatus.SC_OK);
-            when(closeableHttpResponseMock.getReasonPhrase()).thenReturn("OK");
+            when(mockEntity.getContent()).thenReturn(
+                    new ByteArrayInputStream(responseContent.getBytes(StandardCharsets.UTF_8)));
         }
 
-        when(closeableHttpResponseMock.getEntity()).thenReturn(httpEntity);
-        when(closeableHttpClientMock.execute(any(ClassicHttpRequest.class))).thenReturn(closeableHttpResponseMock);
+        if (responseStatus == ResponseStatus.FORBIDDEN) {
+            when(mockStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_FORBIDDEN);
+            doReturn(new ByteArrayInputStream(HUB_MODE_DENIED.getBytes(StandardCharsets.UTF_8))).when(mockEntity)
+                    .getContent();
+        }
 
         try {
             WebSubHubAdapterUtil.makeTopicMgtAPICall(topic, webSubHubBaseUrl, operation);
 
             if (expectedException == null) {
-                verify(closeableHttpResponseMock).getCode();
-                verify(closeableHttpResponseMock).getReasonPhrase();
-                verify(closeableHttpResponseMock).getEntity();
+
+                verify(mockHttpClientBuilder).useSystemProperties();
+                verify(mockHttpClientBuilder).build();
+                verify(mockResponse).getStatusLine();
+                verify(mockResponse).getEntity();
+                verify(mockEntity).getContent();
             } else {
                 Assert.fail("Expected an exception of type: " + expectedException.getName());
             }
@@ -354,110 +314,6 @@ public class WebSubHubAdapterUtilTest {
             }
             Assert.assertSame(e.getClass(), expectedException);
         }
-    }
-
-    @DataProvider(name = "makeAsyncAPICallInvalidParameterDataProvider")
-    public Object[][] makeAsyncAPICallInvalidParameterDataProvider() {
-
-        return new Object[][]{
-                // topic, web sub hub baseUrl, orgId, orgName, eventUri, testProperty, expectedException, expectedError
-                {null, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, TEST_PROPERTY,
-                        WebSubAdapterClientException.class, ERROR_INVALID_EVENT_TOPIC},
-                {TEST_TOPIC, null, TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, TEST_PROPERTY,
-                        WebSubAdapterClientException.class, ERROR_INVALID_WEB_SUB_HUB_BASE_URL},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, null, TEST_EVENT, TEST_PROPERTY,
-                        WebSubAdapterClientException.class, ERROR_INVALID_EVENT_ORGANIZATION_NAME},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, TEST_ORG_NAME, null, TEST_PROPERTY,
-                        WebSubAdapterClientException.class, ERROR_INVALID_EVENT_URI},
-                {TEST_TOPIC, WEBSUB_HUB_BASE_URL, TEST_ORG_ID, TEST_ORG_NAME, TEST_EVENT, null,
-                        WebSubAdapterClientException.class, ERROR_NULL_EVENT_PAYLOAD},
-        };
-    }
-
-    @Test(dataProvider = "makeAsyncAPICallInvalidParameterDataProvider")
-    public void testMakeAsyncAPICallHandleInvalidParameters(String topic, String webSubHubBaseUrl,
-                                                            int orgId, String orgName, String eventUri,
-                                                            String testProperty, Class<?> expectedException,
-                                                            WebSubHubAdapterConstants.ErrorMessages error) {
-
-        String ref = "https://localhost:9443/" + orgName + "/test-event";
-
-        EventPayload testEventPayload = getEventPayload(orgId, orgName, testProperty, ref);
-
-        try {
-            SecurityEventTokenPayload securityEventTokenPayload =
-                    WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, eventUri, topic);
-
-            WebSubHubAdapterUtil.makeAsyncAPICall(securityEventTokenPayload, TEST_TENANT, topic, webSubHubBaseUrl);
-
-            Assert.fail("Expected an exception of type: " + expectedException.getName());
-
-        } catch (WebSubAdapterException e) {
-            Assert.assertSame(e.getClass(), expectedException);
-            Assert.assertEquals(e.getErrorCode(), error.getCode());
-        }
-
-    }
-
-    @DataProvider(name = "makeAsyncAPICallValidParameterDataProvider")
-    public Object[][] makeAsyncAPICallValidParameterDataProvider() {
-
-        return new Object[][]{
-                // isEncryptionEnabled
-                {true},
-                {false}
-        };
-    }
-
-    @Test(dataProvider = "makeAsyncAPICallValidParameterDataProvider")
-    public void testMakeAsyncAPICallHandleValidParameters(Boolean isEncryptionEnabled) throws Exception {
-
-        String ref = "https://localhost:9443/" + TEST_ORG_NAME + "/test-event";
-
-        EventPayload testEventPayload = getEventPayload(TEST_ORG_ID, TEST_ORG_NAME, TEST_PROPERTY, ref);
-
-        try {
-            SecurityEventTokenPayload securityEventTokenPayload =
-                    WebSubHubAdapterUtil.buildSecurityEventToken(testEventPayload, TEST_EVENT, TEST_TOPIC);
-
-            when(webSubAdapterConfigurationMock.isEncryptionEnabled()).thenReturn(isEncryptionEnabled);
-            CloseableHttpAsyncClient closeableHttpAsyncClientMock = mock(CloseableHttpAsyncClient.class);
-            when(clientManagerMock.getClient()).thenReturn(closeableHttpAsyncClientMock);
-
-            ArgumentCaptor<SimpleHttpRequest> httpRequestArgumentCaptor =
-                    ArgumentCaptor.forClass(SimpleHttpRequest.class);
-            ArgumentCaptor<FutureCallback<SimpleHttpResponse>> futureCallbackArgumentCaptor =
-                    ArgumentCaptor.forClass(FutureCallback.class);
-
-            WebSubHubAdapterUtil.makeAsyncAPICall(securityEventTokenPayload, TEST_TENANT,
-                    TEST_TOPIC, WEBSUB_HUB_BASE_URL);
-
-            verify(closeableHttpAsyncClientMock).execute(httpRequestArgumentCaptor.capture(),
-                    futureCallbackArgumentCaptor.capture());
-
-            String requestString = httpRequestArgumentCaptor.getValue().getBodyText();
-            JSONObject requestObj = new JSONObject(requestString);
-
-            if (isEncryptionEnabled) {
-                requestObj.put(PAYLOAD_EVENT_JSON_KEY,
-                        TestUtils.decryptEventPayload(requestObj.get(PAYLOAD_EVENT_JSON_KEY).toString()));
-            }
-
-            JSONObject actualEventPayloadJSON = requestObj.getJSONObject(PAYLOAD_EVENT_JSON_KEY)
-                    .getJSONObject(TEST_EVENT);
-
-            assertNotNull(actualEventPayloadJSON);
-            assertEquals(actualEventPayloadJSON.get("organizationId").toString(),
-                    Integer.toString(testEventPayload.getOrganizationId()));
-            assertEquals(actualEventPayloadJSON.get("organizationName"), testEventPayload.getOrganizationName());
-            assertEquals(actualEventPayloadJSON.get("ref"), testEventPayload.getRef());
-            assertEquals(actualEventPayloadJSON.get("testProperty"),
-                    ((TestEventPayload) testEventPayload).getTestProperty());
-
-        } catch (WebSubAdapterException e) {
-            Assert.fail("Received exception: " + e.getClass().getName() + " for a successful test case.");
-        }
-
     }
 
     /**

@@ -20,10 +20,8 @@ package org.wso2.identity.outbound.adapter.websubhub.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hc.core5.http.HttpRequest;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,23 +44,17 @@ public class WebSubHubCorrelationLogUtils {
      *
      * @param request   Http out request.
      */
-    public static void triggerCorrelationLogForRequest(HttpRequest request) {
+    public static void triggerCorrelationLogForRequest(HttpEntityEnclosingRequestBase request) {
 
         if (isCorrelationLogsEnabled() && correlationLog.isInfoEnabled()) {
             List<String> logPropertiesList = new ArrayList<>();
-            try {
-                URI requestUri = new URI(request.getRequestUri());
-                logPropertiesList.add(CORRELATION_LOG_REQUEST_START);
-                logPropertiesList.add(Long.toString(System.currentTimeMillis()));
-                logPropertiesList.add(request.getMethod());
-                logPropertiesList.add(requestUri.getRawQuery());
-                logPropertiesList.add(requestUri.getRawPath());
+            logPropertiesList.add(CORRELATION_LOG_REQUEST_START);
+            logPropertiesList.add(Long.toString(System.currentTimeMillis()));
+            logPropertiesList.add(request.getMethod());
+            logPropertiesList.add(request.getURI().getQuery());
+            logPropertiesList.add(request.getURI().getPath());
 
-                correlationLog.info(createFormattedLog(logPropertiesList));
-            } catch (URISyntaxException e) {
-                correlationLog.error("Error while parsing the request URI in WebSub correlation log utils: "
-                        + request.getRequestUri());
-            }
+            correlationLog.info(createFormattedLog(logPropertiesList));
         }
     }
 
@@ -73,28 +65,23 @@ public class WebSubHubCorrelationLogUtils {
      * @param requestStartTime  Request start time.
      * @param otherParams       Other response parameters that needs to be logged.
      */
-    public static void triggerCorrelationLogForResponse(HttpRequest request, long requestStartTime,
+    public static void triggerCorrelationLogForResponse(HttpEntityEnclosingRequestBase request, long requestStartTime,
                                                         String... otherParams) {
 
         if (isCorrelationLogsEnabled() && correlationLog.isInfoEnabled()) {
             long currentTime = System.currentTimeMillis();
             long timeTaken = currentTime - requestStartTime;
-            List<String> logPropertiesList = new ArrayList<>();
-            try {
-                URI requestUri = new URI(request.getRequestUri());
-                logPropertiesList.add(Long.toString(timeTaken));
-                logPropertiesList.add(CORRELATION_LOG_REQUEST_END);
-                logPropertiesList.add(Long.toString(requestStartTime));
-                logPropertiesList.add(request.getMethod());
-                logPropertiesList.add(requestUri.getRawQuery());
-                logPropertiesList.add(requestUri.getRawPath());
-                Collections.addAll(logPropertiesList, otherParams);
 
-                correlationLog.info(createFormattedLog(logPropertiesList));
-            } catch (URISyntaxException e) {
-                correlationLog.error("Error while parsing the request URI in WebSub correlation log utils: "
-                        + request.getRequestUri());
-            }
+            List<String> logPropertiesList = new ArrayList<>();
+            logPropertiesList.add(Long.toString(timeTaken));
+            logPropertiesList.add(CORRELATION_LOG_REQUEST_END);
+            logPropertiesList.add(Long.toString(requestStartTime));
+            logPropertiesList.add(request.getMethod());
+            logPropertiesList.add(request.getURI().getQuery());
+            logPropertiesList.add(request.getURI().getPath());
+            Collections.addAll(logPropertiesList, otherParams);
+
+            correlationLog.info(createFormattedLog(logPropertiesList));
         }
     }
 
