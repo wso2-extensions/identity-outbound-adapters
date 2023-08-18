@@ -25,12 +25,6 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.base.MultitenantConstants;
-import org.wso2.carbon.core.util.KeyStoreManager;
-import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.identity.outbound.adapter.common.OutboundAdapterConfigurationProvider;
 import org.wso2.identity.outbound.adapter.websubhub.WebSubHubAdapterService;
 import org.wso2.identity.outbound.adapter.websubhub.config.WebSubAdapterConfiguration;
@@ -55,15 +49,8 @@ public class WebSubHubAdapterServiceComponent {
                     webSubHubEventAdapter, null);
             WebSubHubAdapterDataHolder.getInstance().setAdapterConfiguration(new WebSubAdapterConfiguration(
                     OutboundAdapterConfigurationProvider.getInstance()));
-
-            KeyStoreManager keyStoreMan = KeyStoreManager.getInstance(
-                    MultitenantConstants.SUPER_TENANT_ID);
-            WebSubHubAdapterDataHolder.getInstance().setKeyStore(keyStoreMan.getPrimaryKeyStore());
-            WebSubHubAdapterDataHolder.getInstance().setKeyStorePassword(keyStoreMan.getPrimaryPrivateKeyPasssword());
-
             WebSubHubAdapterDataHolder.getInstance().setClientManager(new ClientManager());
             WebSubHubAdapterDataHolder.getInstance().setResourceRetriever(new DefaultResourceRetriever());
-
             if (log.isDebugEnabled()) {
                 log.debug("Successfully activated the WebSub Hub adapter service.");
             }
@@ -79,22 +66,6 @@ public class WebSubHubAdapterServiceComponent {
             log.debug("Successfully de-activated the WebSub Hub adapter service.");
         }
     }
-
-    @Reference(
-            name = "identity.core.init.event.service",
-            service = IdentityCoreInitializedEvent.class,
-            cardinality = ReferenceCardinality.MANDATORY,
-            policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetIdentityCoreInitializedEventService"
-    )
-    protected void setIdentityCoreInitializedEventService(IdentityCoreInitializedEvent identityCoreInitializedEvent) {
-        /* This is to ensure that this component will start only after the CarbonCoreServiceComponent has
-        been initialized. */
-    }
-
-    protected void unsetIdentityCoreInitializedEventService(
-            IdentityCoreInitializedEvent identityCoreInitializedEvent) {
-        /* This is to ensure that this component will start only after the CarbonCoreServiceComponent has
-        been initialized. */
-    }
 }
+
+
