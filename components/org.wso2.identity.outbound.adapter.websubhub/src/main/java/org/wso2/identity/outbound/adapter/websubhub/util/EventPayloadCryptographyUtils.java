@@ -71,7 +71,6 @@ public class EventPayloadCryptographyUtils {
     private static final ConcurrentMap<String, DefaultJWKSetCache> cacheMap = new ConcurrentHashMap<>();
     private static final KeyGenerator keyGenerator;
 
-
     static {
         try {
             int keyBitLength = EncryptionMethod.A128GCM.cekBitLength();
