@@ -107,7 +107,9 @@ public class WebSubHubAdapterConstants {
         ERROR_CREATING_ASYNC_HTTP_CLIENT("65008", "Error while creating the Async HTTP client.",
                 "Server error encountered while creating the Async HTTP Client of WebSub Hub Adapter."),
         TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS("65009", "Error occurred while de-registering topic", "Backend error" +
-                " received from WebSubHub while attempting to de-register topic: %s. Active subscribers: %s.");
+                " received from WebSubHub while attempting to de-register topic: %s. Active subscribers: %s."),
+        ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY("65013", "Unable to retrieve event encryption public key",
+                "Unable to retrieve event encryption public key from %s.");
 
         private final String code;
         private final String message;

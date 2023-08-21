@@ -75,6 +75,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_INVALID_WEB_SUB_OPERATION;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_NULL_EVENT_PAYLOAD;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.TOPIC_DEREGISTRATION_FAILURE_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_ACTIVE_SUBS;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.HUB_MODE;
@@ -182,6 +183,13 @@ public class WebSubHubAdapterUtil {
             }
             request.setEntity(new StringEntity(jsonString));
         } catch (IOException | IdentityEventException | ParseException e) {
+            if (e instanceof IdentityEventException) {
+                if (ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getCode()
+                        .equals(((IdentityEventException) e).getErrorCode())) {
+                    // Break the flow and this exception need not to be passed and we have logged it at lower layer.
+                    return;
+                }
+            }
             throw handleClientException(ERROR_PUBLISHING_EVENT_INVALID_PAYLOAD);
         }
 

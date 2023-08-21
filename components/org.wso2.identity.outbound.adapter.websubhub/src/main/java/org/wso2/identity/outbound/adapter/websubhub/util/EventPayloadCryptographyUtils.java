@@ -57,6 +57,7 @@ import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapter
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.CRYPTO_KEY_RESPONSE_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ENCRYPTED_PAYLOAD_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ENCRYPTION_KEY_ENDPOINT_URL_TENANT_PLACEHOLDER;
+import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.ErrorMessages.ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.IV_PARAMETER_SPEC_JSON_KEY;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM;
 import static org.wso2.identity.outbound.adapter.websubhub.util.WebSubHubAdapterConstants.SYMMETRIC_ENCRYPTION_ALGORITHM_WITH_MODE;
@@ -85,8 +86,8 @@ public class EventPayloadCryptographyUtils {
      *
      * @param payloadJsonString Event payload JSON as a string.
      * @param tenantDomain      Tenant domain.
-     * @return                  Encrypted event payload.
-     * @throws IdentityEventException   Error while encrypting the JSON payload.
+     * @return Encrypted event payload.
+     * @throws IdentityEventException Error while encrypting the JSON payload.
      */
     public static JSONObject encryptEventPayload(String payloadJsonString, String tenantDomain)
             throws IdentityEventException {
@@ -168,7 +169,7 @@ public class EventPayloadCryptographyUtils {
     private static DefaultJWKSetCache getJWKCache(String tenantDomain) {
 
         return cacheMap.computeIfAbsent(tenantDomain, k ->
-                 new DefaultJWKSetCache(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
+                new DefaultJWKSetCache(WebSubHubAdapterDataHolder.getInstance().getAdapterConfiguration()
                         .getEncryptionKeyCacheLifespan(), TimeUnit.MINUTES));
     }
 
@@ -200,9 +201,9 @@ public class EventPayloadCryptographyUtils {
             URL keyEndpointURL = new URL(keyEndpointURLString);
             return resourceRetriever.retrieveResource(keyEndpointURL);
         } catch (IOException e) {
-            log.error("Unable to retrieve event encryption public key from " + keyEndpointURLString, e);
-            throw new IdentityEventException("Unable to retrieve event encryption public key from " +
-                    keyEndpointURLString, e);
+            log.error(String.format(ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getDescription(), keyEndpointURLString), e);
+            throw new IdentityEventException(ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getCode(),
+                    ERROR_RETRIEVING_ENCRYPTION_PUBLIC_KEY.getMessage());
         }
     }
 }
