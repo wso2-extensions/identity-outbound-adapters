@@ -60,6 +60,10 @@
             <groupId>org.wso2.identity.outbound.adapters</groupId>
             <artifactId>org.wso2.identity.outbound.adapter.common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.central.log.mgt</artifactId>
+        </dependency>
 
         <!--Test dependencies-->
         <dependency>
@@ -131,6 +135,8 @@
                             org.wso2.carbon.identity.event; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.json.simple; version="${com.googlecode.json-simple.wso2.version.range}",
                             org.slf4j; version="${org.slf4j.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.central.log.mgt.utils; version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.utils; version="${carbon.kernel.package.import.version.range}",
                         </Import-Package>
                     </instructions>
                 </configuration>
