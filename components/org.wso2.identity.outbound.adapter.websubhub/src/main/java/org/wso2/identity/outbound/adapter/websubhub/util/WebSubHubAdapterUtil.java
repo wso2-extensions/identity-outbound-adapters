@@ -210,7 +210,7 @@ public class WebSubHubAdapterUtil {
                     .inputParam(WebSubHubAdapterConstants.LogConstants.InputKeys.TOPIC, topic)
                     .resultMessage("Publishing event data to WebSubHub.")
                     .resultStatus(DiagnosticLog.ResultStatus.SUCCESS)
-                    .logDetailLevel(DiagnosticLog.LogDetailLevel.APPLICATION);
+                    .logDetailLevel(DiagnosticLog.LogDetailLevel.INTERNAL_SYSTEM);
             LoggerUtils.triggerDiagnosticLogEvent(diagnosticLogBuilder);
         }
 
