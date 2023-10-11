@@ -137,4 +137,38 @@ public class WebSubHubAdapterConstants {
             return description;
         }
     }
+
+    /**
+     * Define logging constants.
+     */
+    public static class LogConstants {
+
+        private LogConstants() {
+        }
+        
+        public static final String WEB_SUB_HUB_ADAPTER = "web-sub-hub-adapter";
+
+        /**
+         * Define action IDs for diagnostic logs.
+         */
+        public static class ActionIDs {
+
+            private ActionIDs() {
+            }
+
+            public static final String PUBLISH_EVENT = "publish-event";
+        }
+
+        /**
+         * Define common and reusable Input keys for diagnostic logs.
+         */
+        public static class InputKeys {
+
+            private InputKeys() {
+            }
+            public static final String URL = "url";
+            public static final String TENANT_DOMAIN = "tenant domain";
+            public static final String TOPIC = "topic";
+        }
+    }
 }

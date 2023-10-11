@@ -41,7 +41,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.MDC;
+import org.wso2.carbon.identity.central.log.mgt.utils.LoggerUtils;
 import org.wso2.carbon.identity.event.IdentityEventException;
+import org.wso2.carbon.utils.DiagnosticLog;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterClientException;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterException;
 import org.wso2.identity.outbound.adapter.websubhub.exception.WebSubAdapterServerException;
@@ -197,6 +199,19 @@ public class WebSubHubAdapterUtil {
 
         if (log.isDebugEnabled()) {
             log.debug("Publishing event data to WebSubHub. URL: " + url + " tenant domain: " + tenantDomain);
+        }
+        if (LoggerUtils.isDiagnosticLogsEnabled()) {
+            DiagnosticLog.DiagnosticLogBuilder diagnosticLogBuilder = new DiagnosticLog.DiagnosticLogBuilder(
+                    WebSubHubAdapterConstants.LogConstants.WEB_SUB_HUB_ADAPTER,
+                    WebSubHubAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT);
+            diagnosticLogBuilder
+                    .inputParam(WebSubHubAdapterConstants.LogConstants.InputKeys.URL, url)
+                    .inputParam(WebSubHubAdapterConstants.LogConstants.InputKeys.TENANT_DOMAIN, tenantDomain)
+                    .inputParam(WebSubHubAdapterConstants.LogConstants.InputKeys.TOPIC, topic)
+                    .resultMessage("Publishing event data to WebSubHub.")
+                    .resultStatus(DiagnosticLog.ResultStatus.SUCCESS)
+                    .logDetailLevel(DiagnosticLog.LogDetailLevel.INTERNAL_SYSTEM);
+            LoggerUtils.triggerDiagnosticLogEvent(diagnosticLogBuilder);
         }
 
         WebSubHubCorrelationLogUtils.triggerCorrelationLogForRequest(request);
