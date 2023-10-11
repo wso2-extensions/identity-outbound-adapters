@@ -145,6 +145,7 @@ public class WebSubHubAdapterConstants {
 
         private LogConstants() {
         }
+        
         public static final String WEB_SUB_HUB_ADAPTER = "web-sub-hub-adapter";
 
         /**
