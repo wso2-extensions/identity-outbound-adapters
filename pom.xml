@@ -301,7 +301,7 @@
         <httpasyncclient.version.range>[4.0.0, 5.0.0)</httpasyncclient.version.range>
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
         <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>
-        <carbon.identity.framework.imp.pkg.version.range>[5.20.90, 7.0.0)
+        <carbon.identity.framework.imp.pkg.version.range>[5.20.90, 8.0.0)
         </carbon.identity.framework.imp.pkg.version.range>
         <com.googlecode.json-simple.wso2.version.range>[0.0.0, 2.0.0)</com.googlecode.json-simple.wso2.version.range>
 
